@@ -80,6 +80,8 @@ struct CatsView: View {
 struct CatCard: View {
     let cat: Cat
 
+    private var status: DueStatus? { cat.archived ? nil : cat.worstDueStatus }
+
     private var subtitle: String {
         var parts: [String] = []
         if let age = Fmt.age(from: cat.birthday) {
@@ -103,14 +105,25 @@ struct CatCard: View {
                     .lineLimit(1)
             }
             HStack(spacing: 4) {
-                if !cat.specialNeeds.trimmed.isEmpty { Pill("special needs", tint: .orange) }
-                if !cat.allergies.trimmed.isEmpty { Pill("allergies", tint: .orange) }
+                switch status {
+                case .some(.overdue): Pill("overdue", tint: .red)
+                case .some(.soon): Pill("due soon", tint: .orange)
+                default: EmptyView()
+                }
+                if !cat.specialNeeds.trimmed.isEmpty { Pill("special needs", tint: .purple) }
+                if !cat.allergies.trimmed.isEmpty { Pill("allergies", tint: .purple) }
             }
             .frame(minHeight: 18)
         }
         .padding(16)
         .frame(maxWidth: .infinity)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            if let status, !cat.archived {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(status.color, lineWidth: 2)
+            }
+        }
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .accessibilityElement(children: .combine)
     }

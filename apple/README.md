@@ -4,8 +4,9 @@ A native SwiftUI app. One app target runs on iOS, iPadOS and macOS 27.
 Data is stored on the device with SwiftData; the model is ready for iCloud
 sync later.
 
-**Status:** phase 1 of 8. Cats, the cat page, add/edit/archive/delete,
-round profile photos, contacts. See [the roadmap](#roadmap).
+**Status:** phase 2 of 8. Cats, round profile photos, contacts,
+vaccinations, medications and treatments, and the Due tab. See
+[the roadmap](#roadmap).
 
 ## First-time setup
 
@@ -90,7 +91,7 @@ CatOBase/
 ## Roadmap
 
 1. **Skeleton** ✅: models, cat grid, cat page, add/edit/archive/delete, contacts
-2. **Health:** vaccinations, treatments with "✓ given", the Due tab
+2. **Health** ✅: vaccinations, treatments with "✓ given", the Due tab
 3. **Weight:** logging, Swift Charts graph, weight-loss warning
 4. **Media:** photo gallery, documents with QuickLook, **round-avatar crop
    editor with automatic cat detection**

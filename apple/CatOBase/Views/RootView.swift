@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 enum AppTab: Hashable {
@@ -7,6 +8,11 @@ enum AppTab: Hashable {
 /// Tabs on iPhone; a sidebar on iPad and Mac.
 struct RootView: View {
     @State private var tab: AppTab = .cats
+    @Query(filter: #Predicate<Cat> { $0.archived == false }) private var activeCats: [Cat]
+
+    private var overdueCount: Int {
+        activeCats.flatMap(\.dueItems).filter { $0.status == .overdue }.count
+    }
 
     var body: some View {
         TabView(selection: $tab) {
@@ -16,6 +22,7 @@ struct RootView: View {
             Tab("Due", systemImage: "calendar.badge.clock", value: AppTab.due) {
                 DueView()
             }
+            .badge(overdueCount)
             Tab("Contacts", systemImage: "phone", value: AppTab.contacts) {
                 ContactsView()
             }

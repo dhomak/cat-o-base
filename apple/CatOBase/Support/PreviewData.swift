@@ -22,6 +22,25 @@ enum PreviewData {
             WeightEntry(date: daysAgo(5), kg: 4.2),
         ]
 
+        let rabies = Vaccination(name: "Rabies")
+        rabies.dateGiven = daysAgo(370)
+        rabies.nextDue = daysAgo(5)
+        rabies.vet = "Vet TLV"
+        let tricat = Vaccination(name: "FVRCP (tricat)")
+        tricat.dateGiven = daysAgo(400)
+        tricat.nextDue = daysAgo(-695)
+        murka.vaccinations = [rabies, tricat]
+
+        let bravecto = Treatment(name: "Bravecto")
+        bravecto.kind = .fleaTick
+        bravecto.intervalDays = 90
+        bravecto.lastGiven = daysAgo(84)
+        bravecto.nextDue = daysAgo(-6)
+        let semintra = Treatment(name: "Semintra")
+        semintra.dose = "0.5 ml"
+        semintra.schedule = "daily with food"
+        murka.treatments = [bravecto, semintra]
+
         let barsik = Cat(name: "Barsik")
         barsik.sex = .male
         barsik.birthday = Calendar.current.date(byAdding: .year, value: -3, to: .now)

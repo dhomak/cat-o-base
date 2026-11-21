@@ -8,6 +8,24 @@ struct CatDetailView: View {
 
     @State private var editing = false
     @State private var confirmingDelete = false
+    @State private var healthSheet: HealthSheet?
+
+    enum HealthSheet: Identifiable, Hashable {
+        case newVaccination, editVaccination(Vaccination)
+        case newTreatment, editTreatment(Treatment)
+        var id: Self { self }
+    }
+
+    private var sortedVaccinations: [Vaccination] {
+        (cat.vaccinations ?? []).sorted { ($0.dateGiven ?? .distantPast) > ($1.dateGiven ?? .distantPast) }
+    }
+
+    private var sortedTreatments: [Treatment] {
+        (cat.treatments ?? []).sorted { lhs, rhs in
+            if lhs.active != rhs.active { return lhs.active }
+            return (lhs.nextDue ?? .distantFuture) < (rhs.nextDue ?? .distantFuture)
+        }
+    }
 
     var body: some View {
         List {
@@ -26,6 +44,8 @@ struct CatDetailView: View {
                 }
             }
 
+            comingUpSection
+
             Section("Details") {
                 LabeledContent("Sex", value: sexText)
                 LabeledContent("Born", value: bornText)
@@ -39,6 +59,9 @@ struct CatDetailView: View {
                     }
                 }
             }
+
+            vaccinationsSection
+            treatmentsSection
 
             Section("Food") {
                 if hasFood {
@@ -85,11 +108,122 @@ struct CatDetailView: View {
         .sheet(isPresented: $editing) {
             CatEditView(cat: cat)
         }
+        .sheet(item: $healthSheet) { sheet in
+            switch sheet {
+            case .newVaccination:
+                VaccinationEditView(cat: cat, vaccination: nil)
+            case .editVaccination(let vaccination):
+                VaccinationEditView(cat: cat, vaccination: vaccination)
+            case .newTreatment:
+                TreatmentEditView(cat: cat, treatment: nil)
+            case .editTreatment(let treatment):
+                TreatmentEditView(cat: cat, treatment: treatment)
+            }
+        }
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
             Button("Delete Cat and All Records", role: .destructive, action: deleteCat)
         } message: {
             Text("This permanently deletes every record and photo for this cat. Archiving hides the cat but keeps everything.")
+        }
+    }
+
+    @ViewBuilder
+    private var comingUpSection: some View {
+        let due = cat.dueItems
+        if !due.isEmpty {
+            Section("Coming up") {
+                ForEach(due) { item in
+                    DueRow(item: item, showCat: false)
+                        .swipeActions(edge: .leading) {
+                            Button {
+                                withAnimation { DueActions.markGiven(item, in: context) }
+                            } label: {
+                                Label("Given today", systemImage: "checkmark")
+                            }
+                            .tint(.green)
+                        }
+                }
+            }
+        }
+    }
+
+    private var vaccinationsSection: some View {
+        Section("Vaccinations") {
+            let all = sortedVaccinations
+            ForEach(all) { vaccination in
+                VaccinationRow(vaccination: vaccination, isCurrent: vaccination.isCurrent(among: all))
+                    .onTapGesture { healthSheet = .editVaccination(vaccination) }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            context.delete(vaccination)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                    .contextMenu {
+                        Button("Edit") { healthSheet = .editVaccination(vaccination) }
+                        if vaccination.isCurrent(among: all) {
+                            Button("Record Next Dose Today") {
+                                vaccination.recordNextDose(in: context)
+                            }
+                        }
+                        Button("Delete", role: .destructive) { context.delete(vaccination) }
+                    }
+            }
+            Button {
+                healthSheet = .newVaccination
+            } label: {
+                Label("Add Vaccination", systemImage: "plus")
+            }
+        }
+    }
+
+    private var treatmentsSection: some View {
+        Section("Medications & treatments") {
+            ForEach(sortedTreatments) { treatment in
+                TreatmentRow(treatment: treatment) {
+                    withAnimation { treatment.markGiven() }
+                }
+                .onTapGesture { healthSheet = .editTreatment(treatment) }
+                .swipeActions(edge: .leading) {
+                    if treatment.active {
+                        Button {
+                            withAnimation { treatment.markGiven() }
+                        } label: {
+                            Label("Given", systemImage: "checkmark")
+                        }
+                        .tint(.green)
+                    }
+                }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        context.delete(treatment)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                    Button {
+                        treatment.active.toggle()
+                    } label: {
+                        Label(treatment.active ? "Stop" : "Resume",
+                              systemImage: treatment.active ? "stop.circle" : "play.circle")
+                    }
+                    .tint(.gray)
+                }
+                .contextMenu {
+                    Button("Edit") { healthSheet = .editTreatment(treatment) }
+                    if treatment.active {
+                        Button("Given Today") { treatment.markGiven() }
+                    }
+                    Button(treatment.active ? "Stop" : "Resume") { treatment.active.toggle() }
+                    Button("Delete", role: .destructive) { context.delete(treatment) }
+                }
+            }
+            Button {
+                healthSheet = .newTreatment
+            } label: {
+                Label("Add Medication or Treatment", systemImage: "plus")
+            }
         }
     }
 
