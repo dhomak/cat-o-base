@@ -468,7 +468,8 @@ enum BackupImporter {
             let entry = JournalEntry(date: item.date, kind: item.kind, text: item.text)
             context.insert(entry)
             entry.cat = cat
-        }        return (cat, photoCount, documentCount)
+        }
+        return (cat, photoCount, documentCount)
     }
 
     private static func deleteAll<Model: PersistentModel>(_ type: Model.Type, in context: ModelContext) throws {
