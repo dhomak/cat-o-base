@@ -23,10 +23,7 @@ struct ContactsView: View {
                 } else {
                     List {
                         ForEach(contacts) { contact in
-                            ContactRow(contact: contact)
-                                .contentShape(Rectangle())
-                                .onTapGesture { editing = contact }
-                                .help("Click to edit. Right-click to delete.")
+                            ContactRow(contact: contact) { editing = contact }
                                 .contextMenu {
                                     Button("Edit") { editing = contact }
                                     Button("Delete", role: .destructive) { context.delete(contact) }
@@ -61,29 +58,46 @@ struct ContactsView: View {
 
 struct ContactRow: View {
     let contact: Contact
-
-    private var phoneURL: URL? {
-        let allowed = Set("+0123456789")
-        let digits = contact.phone.filter { allowed.contains($0) }
-        return digits.isEmpty ? nil : URL(string: "tel:\(digits)")
-    }
+    /// Called when the name area is tapped. The phone number has its own menu.
+    var onEdit: (() -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            if !contact.role.isEmpty {
-                Text(contact.role.uppercased())
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+        ContactLines(role: contact.role, name: contact.name, phone: contact.phone,
+                     address: contact.address, notes: contact.notes, onEdit: onEdit)
+    }
+}
+
+/// Shared layout for contacts and a guest cat's owner contacts.
+struct ContactLines: View {
+    let role: String
+    let name: String
+    let phone: String
+    let address: String
+    let notes: String
+    var onEdit: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
+                if !role.isEmpty {
+                    Text(role.uppercased())
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                Text(name).font(.headline)
             }
-            Text(contact.name).font(.headline)
-            if let phoneURL {
-                Link(contact.phone, destination: phoneURL)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture { onEdit?() }
+            .help(onEdit == nil ? "" : "Click to edit. Right-click to delete.")
+
+            PhoneMenu(phone: phone)
+
+            if !address.isEmpty {
+                Text(address).font(.subheadline).foregroundStyle(.secondary)
             }
-            if !contact.address.isEmpty {
-                Text(contact.address).font(.subheadline).foregroundStyle(.secondary)
-            }
-            if !contact.notes.isEmpty {
-                Text(contact.notes).font(.subheadline).foregroundStyle(.secondary)
+            if !notes.isEmpty {
+                Text(notes).font(.subheadline).foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
@@ -129,12 +143,14 @@ struct ContactEditView: View {
                     }
                 }
                 Section {
-                    TextField("Phone", text: $phone)
+                    TextField("Phone", text: $phone, prompt: Text("+972 3 000 0000"))
                         #if os(iOS)
                         .keyboardType(.phonePad)
                         #endif
                     TextField("Address", text: $address, axis: .vertical)
                     TextField("Notes", text: $notes, prompt: Text("Policy number, opening hours…"), axis: .vertical)
+                } footer: {
+                    Text("Start the number with the country code (+972…) so WhatsApp and Telegram work from anywhere. Local numbers starting with 0 use your phone's region.")
                 }
                 if let contact {
                     Section {
@@ -188,34 +204,12 @@ struct ContactEditView: View {
         .modelContainer(PreviewData.container)
 }
 
-/// A contact that came with a guest cat (read-only, tap to call).
+/// A contact that came with a guest cat (read-only).
 struct GuestContactRow: View {
     let contact: ContactDTO
 
-    private var phoneURL: URL? {
-        let allowed = Set("+0123456789")
-        let digits = contact.phone.filter { allowed.contains($0) }
-        return digits.isEmpty ? nil : URL(string: "tel:\(digits)")
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            if !contact.role.isEmpty {
-                Text(contact.role.uppercased())
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
-            Text(contact.name).font(.headline)
-            if let phoneURL {
-                Link(contact.phone, destination: phoneURL)
-            }
-            if !contact.address.isEmpty {
-                Text(contact.address).font(.subheadline).foregroundStyle(.secondary)
-            }
-            if !contact.notes.isEmpty {
-                Text(contact.notes).font(.subheadline).foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 2)
+        ContactLines(role: contact.role, name: contact.name, phone: contact.phone,
+                     address: contact.address, notes: contact.notes)
     }
 }
