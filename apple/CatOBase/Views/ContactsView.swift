@@ -187,3 +187,35 @@ struct ContactEditView: View {
     ContactsView()
         .modelContainer(PreviewData.container)
 }
+
+/// A contact that came with a guest cat (read-only, tap to call).
+struct GuestContactRow: View {
+    let contact: ContactDTO
+
+    private var phoneURL: URL? {
+        let allowed = Set("+0123456789")
+        let digits = contact.phone.filter { allowed.contains($0) }
+        return digits.isEmpty ? nil : URL(string: "tel:\(digits)")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            if !contact.role.isEmpty {
+                Text(contact.role.uppercased())
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            Text(contact.name).font(.headline)
+            if let phoneURL {
+                Link(contact.phone, destination: phoneURL)
+            }
+            if !contact.address.isEmpty {
+                Text(contact.address).font(.subheadline).foregroundStyle(.secondary)
+            }
+            if !contact.notes.isEmpty {
+                Text(contact.notes).font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}

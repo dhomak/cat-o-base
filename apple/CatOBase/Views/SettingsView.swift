@@ -90,7 +90,7 @@ struct SettingsView: View {
                 }
                 exportDocument = nil
             }
-            .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .zip]) { result in
+            .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .zip, .catobaseCat]) { result in
                 switch result {
                 case .success(let url): readBackup(url)
                 case .failure(let error): resultMessage = error.localizedDescription
@@ -256,6 +256,10 @@ extension SettingsView {
             }.value
             busyMessage = nil
             switch outcome {
+            case .success(let read) where read.1 == .catShare:
+                if !read.0.cats.isEmpty {
+                    GuestInbox.shared.pending = ReceivedShare(file: read.0)
+                }
             case .success(let read):
                 pendingImport = PendingImport(file: read.0, source: read.1)
                 showImportChoice = true

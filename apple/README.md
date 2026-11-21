@@ -4,7 +4,9 @@ A native SwiftUI app. One app target runs on iOS, iPadOS and macOS 27.
 Data is stored on the device with SwiftData; the model is ready for iCloud
 sync later.
 
-**Status:** phase 6 of 8. Sitter sheet PDF, backup and import (including
+**Status:** phase 6 of 8, plus cat sharing. Share a cat (choosing what to
+include) through Messages, Telegram and the rest; received cats appear under
+Guest Cats. Camera and document scanner. Sitter sheet PDF, backup and import (including
 from the web app), due-date reminders, cats (sortable by name or age), round profile
 photos with a crop editor and automatic cat detection, photo galleries,
 documents, contacts, vaccinations, medications and treatments, the Due tab,
@@ -67,6 +69,15 @@ xcodegen          # picks up new or renamed files
 
 Then press ⌘R in Xcode. If Xcode was open, it reloads the project
 automatically.
+
+## Sharing a cat
+
+On a cat's page, tap **Share**. Choose what to include, then send it with the
+standard share sheet. The recipient gets a readable summary plus a
+`Name.catobase` file; opening that file in Cat-o-Base (from Messages,
+Telegram, Mail, Files or Finder) adds the cat under **Guest Cats**. Sharing
+the same cat again lets them update their copy. Shares are snapshots: there's
+no live sync, which would need iCloud.
 
 ## Free Apple account notes
 

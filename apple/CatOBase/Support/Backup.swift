@@ -13,11 +13,19 @@ import UniformTypeIdentifiers
 struct BackupFile: Codable, Sendable {
     static let formatName = "cat-o-base-apple"
 
+    static let catShareKind = "cat-share"
+
     var format = BackupFile.formatName
     var version = 1
     var exported = Date()
     var cats: [CatDTO] = []
     var contacts: [ContactDTO] = []
+    /// nil for a full backup; "cat-share" for a single cat sent to someone.
+    var kind: String?
+    /// Sender's name on a cat share.
+    var sharedBy: String?
+
+    var isCatShare: Bool { kind == BackupFile.catShareKind }
 }
 
 struct CatDTO: Codable, Sendable {
@@ -40,6 +48,11 @@ struct CatDTO: Codable, Sendable {
     var archived = false
     var createdAt = Date()
     var profilePhotoID: UUID?
+    var shareID: UUID?
+    var isGuest: Bool?
+    var guestFrom: String?
+    var guestReceivedAt: Date?
+    var guestContacts: [ContactDTO]?
     var photos: [PhotoDTO] = []
     var vaccinations: [VaccinationDTO] = []
     var treatments: [TreatmentDTO] = []
@@ -153,7 +166,7 @@ enum BackupExporter {
         return "Cat-o-Base Backup \(day)"
     }
 
-    private static func dto(_ cat: Cat) -> CatDTO {
+    static func dto(_ cat: Cat) -> CatDTO {
         var dto = CatDTO()
         dto.name = cat.name
         dto.sex = cat.sexRaw
@@ -174,6 +187,11 @@ enum BackupExporter {
         dto.archived = cat.archived
         dto.createdAt = cat.createdAt
         dto.profilePhotoID = cat.profilePhotoID
+        dto.shareID = cat.shareID
+        dto.isGuest = cat.isGuest
+        dto.guestFrom = cat.guestFrom
+        dto.guestReceivedAt = cat.guestReceivedAt
+        dto.guestContacts = cat.isGuest ? cat.guestContacts : nil
         dto.photos = (cat.photos ?? []).compactMap { photo in
             guard let image = photo.imageData else { return nil }
             return PhotoDTO(uuid: photo.uuid, image: image, thumbnail: photo.thumbnailData,
@@ -225,6 +243,7 @@ struct BackupDocument: FileDocument {
 // MARK: - Import
 
 enum BackupSource: String {
+    case catShare = "Shared cat"
     case app = "Cat-o-Base app backup"
     case webZip = "Cat-o-Base web full backup"
     case webJSON = "Cat-o-Base web data export (no photos)"
@@ -266,7 +285,8 @@ enum BackupReader {
 
         if probe.format == BackupFile.formatName {
             if let version = probe.version, version > 1 { throw BackupError.newerVersion(version) }
-            return (try BackupFile.decoder().decode(BackupFile.self, from: data), .app)
+            let file = try BackupFile.decoder().decode(BackupFile.self, from: data)
+            return (file, file.isCatShare ? .catShare : .app)
         }
         if probe.app == "cat-o-base" || probe.app == "catdb" {
             return (try WebImport.backup(fromJSON: data), .webJSON)
@@ -322,93 +342,13 @@ enum BackupImporter {
             progress("Importing \(catLabel)…")
             log.info("Cat \(catLabel, privacy: .public): \(dto.photos.count) photos, \(dto.documents.count) documents")
             await Task.yield()
-            let cat = Cat(name: dto.name)
-            cat.sexRaw = CatSex(rawValue: dto.sex)?.rawValue ?? CatSex.unknown.rawValue
-            cat.neutered = dto.neutered
-            cat.breed = dto.breed
-            cat.markings = dto.markings
-            cat.microchip = dto.microchip
-            cat.birthday = dto.birthday
-            cat.birthdayApprox = dto.birthdayApprox
-            cat.adoptionDate = dto.adoptionDate
-            cat.specialNeeds = dto.specialNeeds
-            cat.allergies = dto.allergies
-            cat.foodBrand = dto.foodBrand
-            cat.foodPortion = dto.foodPortion
-            cat.foodSchedule = dto.foodSchedule
-            cat.foodNotes = dto.foodNotes
-            cat.notes = dto.notes
-            cat.archived = dto.archived
-            cat.createdAt = dto.createdAt
-            context.insert(cat)
-
-            for (photoIndex, photoDTO) in dto.photos.enumerated() {
+            let (_, photoCount, documentCount) = try await insertCat(dto, into: context) { index in
                 try Task.checkCancellation()
-                progress("\(catLabel)\nPhoto \(photoIndex + 1) of \(dto.photos.count)")
+                progress("\(catLabel)\nPhoto \(index + 1) of \(dto.photos.count)")
                 await Task.yield()
-                let photoStarted = Date()
-                guard let photo = await makePhoto(photoDTO) else {
-                    log.error("Photo \(photoIndex + 1) couldn't be read (\(photoDTO.image.count) bytes), skipped")
-                    continue
-                }
-                log.info("Photo \(photoIndex + 1) done in \(Date().timeIntervalSince(photoStarted), format: .fixed(precision: 2)) s")
-                context.insert(photo)
-                photo.cat = cat
-                summary.photos += 1
             }
-            cat.profilePhotoID = dto.profilePhotoID
-
-            for item in dto.vaccinations {
-                let vaccination = Vaccination(name: item.name)
-                vaccination.dateGiven = item.dateGiven
-                vaccination.nextDue = item.nextDue
-                vaccination.vet = item.vet
-                vaccination.notes = item.notes
-                context.insert(vaccination)
-                vaccination.cat = cat
-            }
-            for item in dto.treatments {
-                let treatment = Treatment(name: item.name)
-                treatment.kindRaw = TreatmentKind(rawValue: item.kind)?.rawValue ?? TreatmentKind.other.rawValue
-                treatment.dose = item.dose
-                treatment.schedule = item.schedule
-                treatment.intervalDays = item.intervalDays
-                treatment.lastGiven = item.lastGiven
-                treatment.nextDue = item.nextDue
-                treatment.endDate = item.endDate
-                treatment.active = item.active
-                treatment.notes = item.notes
-                context.insert(treatment)
-                treatment.cat = cat
-            }
-            for item in dto.weights {
-                let weight = WeightEntry(date: item.date, kg: item.kg)
-                context.insert(weight)
-                weight.cat = cat
-            }
-            for item in dto.visits {
-                let visit = VetVisit(date: item.date)
-                visit.clinic = item.clinic
-                visit.reason = item.reason
-                visit.outcome = item.outcome
-                visit.cost = item.cost
-                visit.notes = item.notes
-                context.insert(visit)
-                visit.cat = cat
-            }
-            for item in dto.documents {
-                let document = CatDocument(title: item.title, filename: item.filename,
-                                           typeIdentifier: item.typeIdentifier, data: item.data)
-                document.addedAt = item.addedAt
-                context.insert(document)
-                document.cat = cat
-                summary.documents += 1
-            }
-            for item in dto.journal {
-                let entry = JournalEntry(date: item.date, kind: item.kind, text: item.text)
-                context.insert(entry)
-                entry.cat = cat
-            }
+            summary.photos += photoCount
+            summary.documents += documentCount
             summary.cats += 1
             progress("\(catLabel)\nSaving…")
             await Task.yield()
@@ -428,6 +368,107 @@ enum BackupImporter {
         try context.save()
         log.info("Import finished in \(Date().timeIntervalSince(started), format: .fixed(precision: 1)) s: \(summary.text, privacy: .public)")
         return summary
+    }
+
+    /// Creates one cat and all its records from a DTO. Returns the cat and how many
+    /// photos and documents were added. `beforePhoto` runs before each photo (progress,
+    /// cancellation).
+    static func insertCat(_ dto: CatDTO, into context: ModelContext,
+                          beforePhoto: (Int) async throws -> Void = { _ in }) async throws -> (Cat, Int, Int) {
+        var photoCount = 0
+        var documentCount = 0
+        let cat = Cat(name: dto.name)
+        cat.sexRaw = CatSex(rawValue: dto.sex)?.rawValue ?? CatSex.unknown.rawValue
+        cat.neutered = dto.neutered
+        cat.breed = dto.breed
+        cat.markings = dto.markings
+        cat.microchip = dto.microchip
+        cat.birthday = dto.birthday
+        cat.birthdayApprox = dto.birthdayApprox
+        cat.adoptionDate = dto.adoptionDate
+        cat.specialNeeds = dto.specialNeeds
+        cat.allergies = dto.allergies
+        cat.foodBrand = dto.foodBrand
+        cat.foodPortion = dto.foodPortion
+        cat.foodSchedule = dto.foodSchedule
+        cat.foodNotes = dto.foodNotes
+        cat.notes = dto.notes
+        cat.archived = dto.archived
+        cat.createdAt = dto.createdAt
+        context.insert(cat)
+
+        for (photoIndex, photoDTO) in dto.photos.enumerated() {
+            try await beforePhoto(photoIndex)
+            let photoStarted = Date()
+            guard let photo = await makePhoto(photoDTO) else {
+                log.error("Photo \(photoIndex + 1) couldn't be read (\(photoDTO.image.count) bytes), skipped")
+                continue
+            }
+            log.info("Photo \(photoIndex + 1) done in \(Date().timeIntervalSince(photoStarted), format: .fixed(precision: 2)) s")
+            context.insert(photo)
+            photo.cat = cat
+            photoCount += 1
+        }
+        cat.profilePhotoID = dto.profilePhotoID
+        cat.shareID = dto.shareID
+        cat.isGuest = dto.isGuest ?? false
+        cat.guestFrom = dto.guestFrom ?? ""
+        cat.guestReceivedAt = dto.guestReceivedAt
+        if let contacts = dto.guestContacts, !contacts.isEmpty {
+            cat.guestContactsData = try? JSONEncoder().encode(contacts)
+        }
+
+        for item in dto.vaccinations {
+            let vaccination = Vaccination(name: item.name)
+            vaccination.dateGiven = item.dateGiven
+            vaccination.nextDue = item.nextDue
+            vaccination.vet = item.vet
+            vaccination.notes = item.notes
+            context.insert(vaccination)
+            vaccination.cat = cat
+        }
+        for item in dto.treatments {
+            let treatment = Treatment(name: item.name)
+            treatment.kindRaw = TreatmentKind(rawValue: item.kind)?.rawValue ?? TreatmentKind.other.rawValue
+            treatment.dose = item.dose
+            treatment.schedule = item.schedule
+            treatment.intervalDays = item.intervalDays
+            treatment.lastGiven = item.lastGiven
+            treatment.nextDue = item.nextDue
+            treatment.endDate = item.endDate
+            treatment.active = item.active
+            treatment.notes = item.notes
+            context.insert(treatment)
+            treatment.cat = cat
+        }
+        for item in dto.weights {
+            let weight = WeightEntry(date: item.date, kg: item.kg)
+            context.insert(weight)
+            weight.cat = cat
+        }
+        for item in dto.visits {
+            let visit = VetVisit(date: item.date)
+            visit.clinic = item.clinic
+            visit.reason = item.reason
+            visit.outcome = item.outcome
+            visit.cost = item.cost
+            visit.notes = item.notes
+            context.insert(visit)
+            visit.cat = cat
+        }
+        for item in dto.documents {
+            let document = CatDocument(title: item.title, filename: item.filename,
+                                       typeIdentifier: item.typeIdentifier, data: item.data)
+            document.addedAt = item.addedAt
+            context.insert(document)
+            document.cat = cat
+            documentCount += 1
+        }
+        for item in dto.journal {
+            let entry = JournalEntry(date: item.date, kind: item.kind, text: item.text)
+            context.insert(entry)
+            entry.cat = cat
+        }        return (cat, photoCount, documentCount)
     }
 
     private static func deleteAll<Model: PersistentModel>(_ type: Model.Type, in context: ModelContext) throws {

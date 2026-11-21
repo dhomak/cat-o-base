@@ -18,9 +18,18 @@ enum SitterSheetPDF {
         guard let pdf = CGContext(url as CFURL, mediaBox: &mediaBox, nil) else { return nil }
 
         let generated = Date()
-        let pages: [AnyView] = cats.isEmpty
-            ? [AnyView(Text("No cats yet.").font(.title).frame(width: pageSize.width, height: pageSize.height))]
-            : cats.map { AnyView(SitterPage(cat: $0, contacts: contacts, generated: generated)) }
+        var pages: [AnyView] = []
+        if cats.isEmpty {
+            pages.append(AnyView(Text("No cats yet.").font(.title)
+                .frame(width: pageSize.width, height: pageSize.height)))
+        }
+        for cat in cats {
+            // A guest cat's page lists its owner's contacts.
+            let pageContacts: [ContactDTO] = cat.isGuest && !cat.guestContacts.isEmpty
+                ? cat.guestContacts
+                : contacts.map(CatShareBuilder.contactDTO)
+            pages.append(AnyView(SitterPage(cat: cat, contacts: pageContacts, generated: generated)))
+        }
 
         for page in pages {
             let content = page
@@ -43,7 +52,7 @@ enum SitterSheetPDF {
 /// One printable page. Fixed light colours so it prints the same in dark mode.
 struct SitterPage: View {
     let cat: Cat
-    let contacts: [Contact]
+    let contacts: [ContactDTO]
     let generated: Date
 
     private let ink = Color.black
@@ -129,7 +138,7 @@ struct SitterPage: View {
             if !contacts.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     label("Contacts")
-                    ForEach(contacts, id: \.persistentModelID) { contact in
+                    ForEach(Array(contacts.enumerated()), id: \.offset) { _, contact in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text(contact.role.isEmpty ? "Contact" : contact.role)
                                 .font(.system(size: 11, weight: .semibold))

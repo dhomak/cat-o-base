@@ -15,6 +15,7 @@ struct CatDetailView: View {
     @State private var cropTarget: CatPhoto?
     @State private var pendingCrop: CatPhoto?
     @State private var sitterSheetURL: URL?
+    @State private var sharing = false
 
     enum HealthSheet: Identifiable, Hashable {
         case newVaccination, editVaccination(Vaccination)
@@ -37,6 +38,10 @@ struct CatDetailView: View {
     var body: some View {
         List {
             header
+
+            if cat.isGuest {
+                guestSection
+            }
 
             if hasCallouts {
                 Section {
@@ -96,6 +101,14 @@ struct CatDetailView: View {
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Button {
+                    sharing = true
+                } label: {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+                .help("Send \(cat.displayName) to someone: choose what to include")
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Button("Edit") { editing = true }
                     .keyboardShortcut("e", modifiers: .command)
                     .help("Edit details (⌘E)")
@@ -121,7 +134,7 @@ struct CatDetailView: View {
                 Button(role: .destructive) {
                     confirmingDelete = true
                 } label: {
-                    Label("Delete Cat", systemImage: "trash")
+                    Label(cat.isGuest ? "Remove Guest Cat" : "Delete Cat", systemImage: "trash")
                 }
                 .help("Delete this cat and all its records")
             }
@@ -158,11 +171,39 @@ struct CatDetailView: View {
             AvatarCropView(photo: photo)
         }
         .quickLookPreview($sitterSheetURL)
+        .sheet(isPresented: $sharing) {
+            CatShareView(cat: cat)
+        }
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
             Button("Delete Cat and All Records", role: .destructive, action: deleteCat)
         } message: {
             Text("This permanently deletes every record and photo for this cat. Archiving hides the cat but keeps everything.")
+        }
+    }
+
+    @ViewBuilder
+    private var guestSection: some View {
+        Section {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(cat.guestFrom.isEmpty ? "Guest cat" : "Guest cat from \(cat.guestFrom)")
+                        .font(.body.weight(.medium))
+                    Text("Received \(Fmt.date(cat.guestReceivedAt)). This is your own copy: edits stay on this device. If it's shared again, you can update it.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "person.2.fill").foregroundStyle(.teal)
+            }
+        }
+        let contacts = cat.guestContacts
+        if !contacts.isEmpty {
+            Section(cat.guestFrom.isEmpty ? "Contacts" : "Contacts from \(cat.guestFrom)") {
+                ForEach(Array(contacts.enumerated()), id: \.offset) { _, contact in
+                    GuestContactRow(contact: contact)
+                }
+            }
         }
     }
 

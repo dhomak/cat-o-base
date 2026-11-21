@@ -33,6 +33,17 @@ final class Cat {
     /// have an inverse.
     var profilePhotoID: UUID?
 
+    // Sharing. `shareID` identifies this cat across devices so a re-sent share can
+    // update the recipient's copy; it's assigned the first time the cat is shared.
+    var shareID: UUID?
+    /// True for cats someone else shared with you.
+    var isGuest: Bool = false
+    /// Name the sender gave when sharing.
+    var guestFrom: String = ""
+    var guestReceivedAt: Date?
+    /// The sender's contacts (vet, emergency…) as JSON-encoded [ContactDTO].
+    var guestContactsData: Data?
+
     @Relationship(deleteRule: .cascade, inverse: \CatPhoto.cat)
     var photos: [CatPhoto]? = []
     @Relationship(deleteRule: .cascade, inverse: \Vaccination.cat)
@@ -72,6 +83,11 @@ final class Cat {
 
     var displayName: String {
         name.isEmpty ? "Unnamed cat" : name
+    }
+
+    var guestContacts: [ContactDTO] {
+        guard let guestContactsData else { return [] }
+        return (try? JSONDecoder().decode([ContactDTO].self, from: guestContactsData)) ?? []
     }
 }
 

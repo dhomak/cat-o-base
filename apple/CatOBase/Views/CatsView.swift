@@ -15,6 +15,9 @@ struct CatsView: View {
         sort.sorted(cats.filter { $0.archived == showArchived })
     }
 
+    private var myCats: [Cat] { visibleCats.filter { !$0.isGuest } }
+    private var guestCats: [Cat] { visibleCats.filter(\.isGuest) }
+
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 16)]
 
     var body: some View {
@@ -23,12 +26,18 @@ struct CatsView: View {
             // navigationDestination below stays registered. Swapping the root view in an
             // if/else can make SwiftUI lose it, and then taps on cats do nothing.
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(visibleCats) { cat in
-                        NavigationLink(value: cat) {
-                            CatCard(cat: cat)
+                VStack(alignment: .leading, spacing: 12) {
+                    if !myCats.isEmpty {
+                        if !guestCats.isEmpty {
+                            sectionHeader("My Cats")
                         }
-                        .buttonStyle(.plain)
+                        grid(myCats)
+                    }
+                    if !guestCats.isEmpty {
+                        sectionHeader("Guest Cats")
+                            .padding(.top, myCats.isEmpty ? 0 : 12)
+                            .help("Cats other people shared with you")
+                        grid(guestCats)
                     }
                 }
                 .padding()
@@ -100,6 +109,23 @@ struct CatsView: View {
         }
     }
 
+    private func grid(_ cats: [Cat]) -> some View {
+        LazyVGrid(columns: columns, spacing: 16) {
+            ForEach(cats) { cat in
+                NavigationLink(value: cat) {
+                    CatCard(cat: cat)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.title3.bold())
+            .padding(.horizontal, 4)
+    }
+
     @ViewBuilder
     private var emptyState: some View {
         if showArchived {
@@ -161,6 +187,9 @@ struct CatCard: View {
                 case .some(.overdue): Pill("overdue", tint: .red)
                 case .some(.soon): Pill("due soon", tint: .orange)
                 default: EmptyView()
+                }
+                if cat.isGuest {
+                    Pill(cat.guestFrom.isEmpty ? "guest" : "from \(cat.guestFrom)", tint: .teal)
                 }
                 if !cat.specialNeeds.trimmed.isEmpty { Pill("special needs", tint: .purple) }
                 if !cat.allergies.trimmed.isEmpty { Pill("allergies", tint: .purple) }

@@ -68,6 +68,24 @@ struct RootView: View {
         .onChange(of: NotificationRouter.shared.pendingCatID) { _, id in
             if id != nil { tab = .cats }
         }
+        // A .catobase file opened from Messages, Telegram, Mail, Files or Finder.
+        .onOpenURL { url in
+            GuestInbox.shared.receive(url)
+        }
+        .sheet(item: Binding(
+            get: { GuestInbox.shared.pending },
+            set: { GuestInbox.shared.pending = $0 }
+        )) { share in
+            GuestReceiveView(share: share)
+        }
+        .alert("Couldn't open the file", isPresented: Binding(
+            get: { GuestInbox.shared.error != nil },
+            set: { if !$0 { GuestInbox.shared.error = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(GuestInbox.shared.error ?? "")
+        }
         .onChange(of: scenePhase) { _, _ in
             // Re-evaluated on return to the app so a new day refreshes reminders.
         }
