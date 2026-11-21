@@ -2,7 +2,9 @@ import SwiftData
 import SwiftUI
 
 struct CatsView: View {
+    @Environment(\.modelContext) private var context
     @Query(sort: \Cat.name) private var cats: [Cat]
+    @State private var path: [Cat] = []
     @State private var showingNewCat = false
     @State private var showArchived = false
     @AppStorage(PrefKey.catSort) private var sort: CatSort = .name
@@ -14,7 +16,7 @@ struct CatsView: View {
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 16)]
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if visibleCats.isEmpty {
                     emptyState
@@ -65,6 +67,20 @@ struct CatsView: View {
             .sheet(isPresented: $showingNewCat) {
                 CatEditView(cat: nil)
             }
+        }
+        .onAppear { openPendingCat() }
+        .onChange(of: NotificationRouter.shared.pendingCatID) { _, _ in
+            openPendingCat()
+        }
+    }
+
+    /// Opens the cat from a tapped reminder.
+    private func openPendingCat() {
+        guard let id = NotificationRouter.shared.pendingCatID else { return }
+        NotificationRouter.shared.pendingCatID = nil
+        if let cat = context.model(for: id) as? Cat {
+            showArchived = cat.archived
+            path = [cat]
         }
     }
 

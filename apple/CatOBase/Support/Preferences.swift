@@ -4,6 +4,15 @@ import Foundation
 enum PrefKey {
     static let catSort = "catSort"
     static let weightUnit = "weightUnit"
+    static let remindersEnabled = "remindersEnabled"
+    static let reminderMinutes = "reminderMinutes"
+    static let remindDayBefore = "remindDayBefore"
+    static let badgeOverdue = "badgeOverdue"
+}
+
+enum PrefDefault {
+    /// 09:00
+    static let reminderMinutes = 9 * 60
 }
 
 enum CatSort: String, CaseIterable, Identifiable {

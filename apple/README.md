@@ -4,7 +4,7 @@ A native SwiftUI app. One app target runs on iOS, iPadOS and macOS 27.
 Data is stored on the device with SwiftData; the model is ready for iCloud
 sync later.
 
-**Status:** phase 4 of 8. Cats (sortable by name or age), round profile
+**Status:** phase 5 of 8. Due-date reminders, cats (sortable by name or age), round profile
 photos with a crop editor and automatic cat detection, photo galleries,
 documents, contacts, vaccinations, medications and treatments, the Due tab,
 and weight tracking with a chart. See [the roadmap](#roadmap).
@@ -96,7 +96,7 @@ CatOBase/
 3. **Weight** ✅: logging in kg or lb, Swift Charts graph, weight-loss warning
 4. **Media** ✅: photo gallery, documents with QuickLook, round-avatar crop
    editor with automatic cat detection
-5. **Reminders:** local notifications for due dates
+5. **Reminders** ✅: local notifications for due dates, app icon badge
 6. **Sharing and backup:** sitter sheet PDF, export/import, import from the
    Cat-o-Base web app
 7. **iPad and Mac polish:** menus, shortcuts, drag and drop, multiple windows

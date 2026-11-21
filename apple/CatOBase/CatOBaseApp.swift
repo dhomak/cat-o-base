@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct CatOBaseApp: App {
@@ -14,6 +15,11 @@ struct CatOBaseApp: App {
             fatalError("Could not open the Cat-o-Base database: \(error)")
         }
     }()
+
+    init() {
+        // Set early so taps on notifications that launched the app are handled.
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+    }
 
     var body: some Scene {
         WindowGroup {
