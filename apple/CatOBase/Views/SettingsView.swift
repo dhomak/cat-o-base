@@ -34,6 +34,7 @@ struct SettingsView: View {
     @State private var showImportChoice = false
     @State private var busyMessage: String?
     @State private var resultMessage: String?
+    @State private var importTask: Task<Void, Never>?
 
     private var remindersToggle: Binding<Bool> {
         Binding(
@@ -117,7 +118,13 @@ struct SettingsView: View {
                         Color.black.opacity(0.25).ignoresSafeArea()
                         VStack(spacing: 12) {
                             ProgressView()
-                            Text(busyMessage).multilineTextAlignment(.center)
+                            Text(busyMessage)
+                                .multilineTextAlignment(.center)
+                                .monospacedDigit()
+                            if importTask != nil {
+                                Button("Cancel", role: .cancel) { importTask?.cancel() }
+                                    .buttonStyle(.bordered)
+                            }
                         }
                         .padding(24)
                         .frame(maxWidth: 300)
@@ -125,7 +132,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            .disabled(busyMessage != nil)
             .task(id: remindersEnabled) {
                 // Give RootView a moment to reschedule before counting.
                 try? await Task.sleep(for: .seconds(1))
@@ -257,18 +263,23 @@ extension SettingsView {
     }
 
     private func performImport(_ pending: PendingImport, replace: Bool) {
-        busyMessage = "Importing…"
-        Task {
+        busyMessage = "Starting import…"
+        importTask = Task {
             do {
                 let summary = try await BackupImporter.run(pending.file, into: context, replace: replace) { message in
                     busyMessage = message
                 }
                 resultMessage = "Imported \(summary.text)."
+            } catch is CancellationError {
+                try? context.save()
+                resultMessage = "Import cancelled. Cats that finished importing were kept."
             } catch {
+                BackupImporter.log.error("Import failed: \(error.localizedDescription, privacy: .public)")
                 resultMessage = "Import failed: \(error.localizedDescription)"
             }
             busyMessage = nil
             pendingImport = nil
+            importTask = nil
         }
     }
 

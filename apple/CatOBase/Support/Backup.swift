@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
@@ -289,10 +290,17 @@ struct ImportSummary {
 
 @MainActor
 enum BackupImporter {
+    /// Shows in Xcode's console (and Console.app) under "import".
+    static let log = Logger(subsystem: "com.arimanoff.catobase", category: "import")
+
     /// Adds everything in `file` to the store. With `replace`, deletes all cats and contacts first.
     static func run(_ file: BackupFile, into context: ModelContext, replace: Bool,
                     progress: @escaping (String) -> Void) async throws -> ImportSummary {
+        log.info("Import started: \(file.cats.count) cats, \(file.contacts.count) contacts, replace=\(replace)")
+        let started = Date()
         if replace {
+            progress("Removing current data…")
+            await Task.yield()
             // Deleted one by one so cascade rules run; then sweep up any orphans.
             try deleteAll(Cat.self, in: context)
             try deleteAll(Contact.self, in: context)
@@ -304,11 +312,16 @@ enum BackupImporter {
             try deleteAll(CatDocument.self, in: context)
             try deleteAll(JournalEntry.self, in: context)
             try context.save()
+            log.info("Old data removed")
         }
 
         var summary = ImportSummary()
         for (catIndex, dto) in file.cats.enumerated() {
-            progress("Importing \(dto.name.isEmpty ? "cat" : dto.name) (\(catIndex + 1) of \(file.cats.count))…")
+            try Task.checkCancellation()
+            let catLabel = "\(dto.name.isEmpty ? "Cat" : dto.name) (\(catIndex + 1) of \(file.cats.count))"
+            progress("Importing \(catLabel)…")
+            log.info("Cat \(catLabel, privacy: .public): \(dto.photos.count) photos, \(dto.documents.count) documents")
+            await Task.yield()
             let cat = Cat(name: dto.name)
             cat.sexRaw = CatSex(rawValue: dto.sex)?.rawValue ?? CatSex.unknown.rawValue
             cat.neutered = dto.neutered
@@ -329,8 +342,16 @@ enum BackupImporter {
             cat.createdAt = dto.createdAt
             context.insert(cat)
 
-            for photoDTO in dto.photos {
-                guard let photo = await makePhoto(photoDTO) else { continue }
+            for (photoIndex, photoDTO) in dto.photos.enumerated() {
+                try Task.checkCancellation()
+                progress("\(catLabel)\nPhoto \(photoIndex + 1) of \(dto.photos.count)")
+                await Task.yield()
+                let photoStarted = Date()
+                guard let photo = await makePhoto(photoDTO) else {
+                    log.error("Photo \(photoIndex + 1) couldn't be read (\(photoDTO.image.count) bytes), skipped")
+                    continue
+                }
+                log.info("Photo \(photoIndex + 1) done in \(Date().timeIntervalSince(photoStarted), format: .fixed(precision: 2)) s")
                 context.insert(photo)
                 photo.cat = cat
                 summary.photos += 1
@@ -389,7 +410,10 @@ enum BackupImporter {
                 entry.cat = cat
             }
             summary.cats += 1
+            progress("\(catLabel)\nSaving…")
+            await Task.yield()
             try context.save()
+            log.info("Cat \(catLabel, privacy: .public) saved")
         }
 
         for item in file.contacts {
@@ -402,6 +426,7 @@ enum BackupImporter {
             summary.contacts += 1
         }
         try context.save()
+        log.info("Import finished in \(Date().timeIntervalSince(started), format: .fixed(precision: 1)) s: \(summary.text, privacy: .public)")
         return summary
     }
 
