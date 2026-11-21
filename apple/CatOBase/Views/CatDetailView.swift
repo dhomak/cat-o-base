@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftData
 import SwiftUI
 
@@ -13,6 +14,7 @@ struct CatDetailView: View {
     @State private var viewer: PhotoViewerStart?
     @State private var cropTarget: CatPhoto?
     @State private var pendingCrop: CatPhoto?
+    @State private var sitterSheetURL: URL?
 
     enum HealthSheet: Identifiable, Hashable {
         case newVaccination, editVaccination(Vaccination)
@@ -99,6 +101,13 @@ struct CatDetailView: View {
             }
             ToolbarItem(placement: .secondaryAction) {
                 Button {
+                    sitterSheetURL = SitterSheetPDF.make(in: context, cats: [cat])
+                } label: {
+                    Label("Sitter Sheet", systemImage: "doc.text.image")
+                }
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                Button {
                     cat.archived.toggle()
                 } label: {
                     Label(cat.archived ? "Unarchive" : "Archive",
@@ -144,6 +153,7 @@ struct CatDetailView: View {
         .sheet(item: $cropTarget) { photo in
             AvatarCropView(photo: photo)
         }
+        .quickLookPreview($sitterSheetURL)
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
             Button("Delete Cat and All Records", role: .destructive, action: deleteCat)

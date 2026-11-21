@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftData
 import SwiftUI
 
@@ -5,6 +6,7 @@ struct CatsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Cat.name) private var cats: [Cat]
     @State private var path: [Cat] = []
+    @State private var sitterSheetURL: URL?
     @State private var showingNewCat = false
     @State private var showArchived = false
     @AppStorage(PrefKey.catSort) private var sort: CatSort = .name
@@ -59,6 +61,13 @@ struct CatsView: View {
                     }
                 }
                 ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        sitterSheetURL = SitterSheetPDF.make(in: context)
+                    } label: {
+                        Label("Sitter Sheet", systemImage: "doc.text.image")
+                    }
+                }
+                ToolbarItem(placement: .secondaryAction) {
                     Toggle(isOn: $showArchived) {
                         Label("Show Archived", systemImage: "archivebox")
                     }
@@ -68,6 +77,7 @@ struct CatsView: View {
                 CatEditView(cat: nil)
             }
         }
+        .quickLookPreview($sitterSheetURL)
         .onAppear { openPendingCat() }
         .onChange(of: NotificationRouter.shared.pendingCatID) { _, _ in
             openPendingCat()
