@@ -51,6 +51,9 @@ targets:
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
+        # There's a native Mac version, so don't offer the iPad app on Mac or Vision Pro.
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Cat-o-Base
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
