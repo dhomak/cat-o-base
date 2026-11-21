@@ -12,6 +12,8 @@ struct PhotosSection: View {
 
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var importProgress: (done: Int, total: Int)?
+    @State private var showingLibrary = false
+    @State private var showingCamera = false
 
     private let columns = [GridItem(.adaptive(minimum: 96, maximum: 160), spacing: 8)]
 
@@ -39,15 +41,41 @@ struct PhotosSection: View {
                     Text("Adding photo \(min(progress.done + 1, progress.total)) of \(progress.total)…")
                         .foregroundStyle(.secondary)
                 }
-            } else {
-                PhotosPicker(selection: $pickerItems, maxSelectionCount: 30, matching: .images) {
-                    Label("Add Photos", systemImage: "plus")
-                }
-                .help("Add up to 30 photos from your library")
-                .onChange(of: pickerItems) { _, items in
-                    importPhotos(items)
-                }
             }
+
+            Menu {
+                #if os(iOS)
+                if CameraPicker.isAvailable {
+                    Button {
+                        showingCamera = true
+                    } label: {
+                        Label("Take Photo", systemImage: "camera")
+                    }
+                }
+                #endif
+                Button {
+                    showingLibrary = true
+                } label: {
+                    Label("Choose from Library", systemImage: "photo.on.rectangle")
+                }
+            } label: {
+                Label("Add Photos", systemImage: "plus")
+            }
+            .disabled(importProgress != nil)
+            .help("Take a photo or add up to 30 from your library")
+            .photosPicker(isPresented: $showingLibrary, selection: $pickerItems,
+                          maxSelectionCount: 30, matching: .images)
+            .onChange(of: pickerItems) { _, items in
+                importPhotos(items)
+            }
+            #if os(iOS)
+            .fullScreenCover(isPresented: $showingCamera) {
+                CameraPicker { data in
+                    importCaptured(data)
+                }
+                .ignoresSafeArea()
+            }
+            #endif
         }
     }
 
@@ -61,16 +89,30 @@ struct PhotosSection: View {
 
     private func importPhotos(_ items: [PhotosPickerItem]) {
         guard !items.isEmpty else { return }
-        importProgress = (0, items.count)
+        let loaders: [() async -> Data?] = items.map { item in
+            { try? await item.loadTransferable(type: Data.self) }
+        }
+        runImport(loaders, fromCamera: false)
+    }
+
+    private func importCaptured(_ data: Data) {
+        runImport([{ data }], fromCamera: true)
+    }
+
+    private func runImport(_ loaders: [() async -> Data?], fromCamera: Bool) {
+        importProgress = (0, loaders.count)
         Task {
-            for (index, item) in items.enumerated() {
-                importProgress = (index, items.count)
-                guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+            for (index, load) in loaders.enumerated() {
+                importProgress = (index, loaders.count)
+                guard let data = await load() else { continue }
                 let prepared = await Task.detached(priority: .userInitiated) {
                     ImageTools.prepare(data)
                 }.value
                 guard let prepared else { continue }
                 let photo = CatPhoto.make(from: prepared)
+                if fromCamera && photo.takenOn == nil {
+                    photo.takenOn = Date()
+                }
                 context.insert(photo)
                 photo.cat = cat
                 if cat.profilePhotoID == nil {

@@ -1,3 +1,4 @@
+import PhotosUI
 import QuickLook
 import SwiftData
 import SwiftUI
@@ -12,6 +13,9 @@ struct DocumentsSection: View {
     @State private var renaming: CatDocument?
     @State private var titleDraft = ""
     @State private var importError: String?
+    @State private var showingScanner = false
+    @State private var showingPhotoPicker = false
+    @State private var photoItem: PhotosPickerItem?
 
     private var documents: [CatDocument] {
         (cat.documents ?? []).sorted { $0.addedAt > $1.addedAt }
@@ -49,12 +53,42 @@ struct DocumentsSection: View {
 
             // Presentation modifiers live on this single row: modifiers on a
             // Section would be copied onto every row.
-            Button {
-                importing = true
+            Menu {
+                #if os(iOS)
+                if DocumentScanner.isAvailable {
+                    Button {
+                        showingScanner = true
+                    } label: {
+                        Label("Scan Document", systemImage: "doc.viewfinder")
+                    }
+                }
+                #endif
+                Button {
+                    showingPhotoPicker = true
+                } label: {
+                    Label("Choose from Photos", systemImage: "photo.on.rectangle")
+                }
+                Button {
+                    importing = true
+                } label: {
+                    Label("Choose File", systemImage: "folder")
+                }
             } label: {
                 Label("Add Document", systemImage: "plus")
             }
-            .help("Add PDFs, images or other files, like lab results or certificates")
+            .help("Scan a paper document, or add a photo or file, like lab results or certificates")
+            .photosPicker(isPresented: $showingPhotoPicker, selection: $photoItem, matching: .images)
+            .onChange(of: photoItem) { _, item in
+                if let item { addPhotoDocument(item) }
+            }
+            #if os(iOS)
+            .fullScreenCover(isPresented: $showingScanner) {
+                DocumentScanner { pdf in
+                    addScan(pdf)
+                }
+                .ignoresSafeArea()
+            }
+            #endif
             .fileImporter(isPresented: $importing,
                           allowedContentTypes: [.pdf, .image, .plainText, .item],
                           allowsMultipleSelection: true,
@@ -80,6 +114,39 @@ struct DocumentsSection: View {
             } message: {
                 Text(importError ?? "")
             }
+        }
+    }
+
+    /// A scanned PDF, named by date; the rename prompt opens so it can get a proper title.
+    private func addScan(_ pdf: Data) {
+        let day = Date.now.formatted(.iso8601.year().month().day())
+        let document = CatDocument(title: "Scan \(Fmt.date(.now))", filename: "Scan \(day).pdf",
+                                   typeIdentifier: UTType.pdf.identifier, data: pdf)
+        context.insert(document)
+        document.cat = cat
+        try? context.save()
+        // Wait for the scanner to finish closing before showing the prompt.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            startRename(document)
+        }
+    }
+
+    private func addPhotoDocument(_ item: PhotosPickerItem) {
+        Task {
+            defer { photoItem = nil }
+            guard let data = try? await item.loadTransferable(type: Data.self) else {
+                importError = "Couldn't read that photo."
+                return
+            }
+            let type = item.supportedContentTypes.first(where: { $0.conforms(to: .image) }) ?? .jpeg
+            let ext = type.preferredFilenameExtension ?? "jpg"
+            let day = Date.now.formatted(.iso8601.year().month().day())
+            let document = CatDocument(title: "Photo \(Fmt.date(.now))", filename: "Photo \(day).\(ext)",
+                                       typeIdentifier: type.identifier, data: data)
+            context.insert(document)
+            document.cat = cat
+            try? context.save()
+            startRename(document)
         }
     }
 

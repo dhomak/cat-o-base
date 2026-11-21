@@ -14,6 +14,8 @@ struct CatEditView: View {
     @State private var newPhotoPreview: CGImage?
     @State private var loadingPhoto = false
     @State private var photoError = false
+    @State private var showingLibrary = false
+    @State private var showingCamera = false
 
     init(cat: Cat?) {
         self.cat = cat
@@ -33,9 +35,33 @@ struct CatEditView: View {
                             .overlay {
                                 if loadingPhoto { ProgressView() }
                             }
-                        PhotosPicker(selection: $photoItem, matching: .images) {
-                            Text(currentAvatar == nil ? "Add Photo" : "Change Photo")
+                        Menu(currentAvatar == nil ? "Add Photo" : "Change Photo") {
+                            #if os(iOS)
+                            if CameraPicker.isAvailable {
+                                Button {
+                                    showingCamera = true
+                                } label: {
+                                    Label("Take Photo", systemImage: "camera")
+                                }
+                            }
+                            #endif
+                            Button {
+                                showingLibrary = true
+                            } label: {
+                                Label("Choose from Library", systemImage: "photo.on.rectangle")
+                            }
                         }
+                        .fixedSize()
+                        .help("Take a photo or choose one from your library")
+                        .photosPicker(isPresented: $showingLibrary, selection: $photoItem, matching: .images)
+                        #if os(iOS)
+                        .fullScreenCover(isPresented: $showingCamera) {
+                            CameraPicker { data in
+                                process(data)
+                            }
+                            .ignoresSafeArea()
+                        }
+                        #endif
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
@@ -116,9 +142,21 @@ struct CatEditView: View {
         guard let item else { return }
         loadingPhoto = true
         Task {
-            let data = try? await item.loadTransferable(type: Data.self)
+            if let data = try? await item.loadTransferable(type: Data.self) {
+                process(data)
+            } else {
+                loadingPhoto = false
+                photoError = true
+            }
+        }
+    }
+
+    /// Resizes the photo and centres the avatar on the cat, off the main thread.
+    private func process(_ data: Data) {
+        loadingPhoto = true
+        Task {
             let prepared = await Task.detached(priority: .userInitiated) {
-                data.flatMap { ImageTools.prepare($0) }
+                ImageTools.prepare(data)
             }.value
             if let prepared {
                 newPhoto = prepared
