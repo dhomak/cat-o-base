@@ -19,21 +19,23 @@ struct CatsView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            Group {
+            // The scroll view is always present (the empty state is an overlay) so the
+            // navigationDestination below stays registered. Swapping the root view in an
+            // if/else can make SwiftUI lose it, and then taps on cats do nothing.
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(visibleCats) { cat in
+                        NavigationLink(value: cat) {
+                            CatCard(cat: cat)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding()
+            }
+            .overlay {
                 if visibleCats.isEmpty {
                     emptyState
-                } else {
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(visibleCats) { cat in
-                                NavigationLink(value: cat) {
-                                    CatCard(cat: cat)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding()
-                    }
                 }
             }
             .navigationTitle(showArchived ? "Archived" : "Cats")

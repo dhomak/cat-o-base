@@ -13,19 +13,19 @@ struct DueView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            // Always-present list with an overlay, so the navigationDestination stays registered.
+            List {
+                section("Overdue", items.filter { $0.status == .overdue })
+                section("Next 2 weeks", items.filter { $0.status == .soon })
+                section("Later", items.filter { $0.status == .later })
+            }
+            .overlay {
                 if items.isEmpty {
                     ContentUnavailableView(
                         "Nothing Due",
                         systemImage: "checkmark.circle",
                         description: Text("Vaccinations and treatments with a next due date appear here.")
                     )
-                } else {
-                    List {
-                        section("Overdue", items.filter { $0.status == .overdue })
-                        section("Next 2 weeks", items.filter { $0.status == .soon })
-                        section("Later", items.filter { $0.status == .later })
-                    }
                 }
             }
             .navigationTitle("Due")
