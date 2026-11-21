@@ -9,10 +9,12 @@ struct CatDetailView: View {
     @State private var editing = false
     @State private var confirmingDelete = false
     @State private var healthSheet: HealthSheet?
+    @AppStorage(PrefKey.weightUnit) private var unit: WeightUnit = .kg
 
     enum HealthSheet: Identifiable, Hashable {
         case newVaccination, editVaccination(Vaccination)
         case newTreatment, editTreatment(Treatment)
+        case logWeight
         var id: Self { self }
     }
 
@@ -50,7 +52,7 @@ struct CatDetailView: View {
                 LabeledContent("Sex", value: sexText)
                 LabeledContent("Born", value: bornText)
                 LabeledContent("Gotcha day", value: Fmt.date(cat.adoptionDate))
-                LabeledContent("Weight", value: cat.latestWeight.map { Fmt.kg($0.kg) } ?? "—")
+                LabeledContent("Weight", value: cat.latestWeight.map { unit.format(kilograms: $0.kg) } ?? "—")
                 if !cat.breed.trimmed.isEmpty { LabeledContent("Breed", value: cat.breed) }
                 if !cat.markings.trimmed.isEmpty { LabeledContent("Markings", value: cat.markings) }
                 if !cat.microchip.trimmed.isEmpty {
@@ -62,6 +64,7 @@ struct CatDetailView: View {
 
             vaccinationsSection
             treatmentsSection
+            WeightSection(cat: cat) { healthSheet = .logWeight }
 
             Section("Food") {
                 if hasFood {
@@ -118,6 +121,8 @@ struct CatDetailView: View {
                 TreatmentEditView(cat: cat, treatment: nil)
             case .editTreatment(let treatment):
                 TreatmentEditView(cat: cat, treatment: treatment)
+            case .logWeight:
+                WeightEntryEditView(cat: cat, entry: nil)
             }
         }
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,

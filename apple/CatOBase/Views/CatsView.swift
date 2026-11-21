@@ -5,9 +5,10 @@ struct CatsView: View {
     @Query(sort: \Cat.name) private var cats: [Cat]
     @State private var showingNewCat = false
     @State private var showArchived = false
+    @AppStorage(PrefKey.catSort) private var sort: CatSort = .name
 
     private var visibleCats: [Cat] {
-        cats.filter { $0.archived == showArchived }
+        sort.sorted(cats.filter { $0.archived == showArchived })
     }
 
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 16)]
@@ -45,6 +46,17 @@ struct CatsView: View {
                     .keyboardShortcut("n", modifiers: .command)
                 }
                 ToolbarItem(placement: .secondaryAction) {
+                    Menu {
+                        Picker("Sort by", selection: $sort) {
+                            ForEach(CatSort.allCases) { option in
+                                Text(option.label).tag(option)
+                            }
+                        }
+                    } label: {
+                        Label("Sort by", systemImage: "arrow.up.arrow.down")
+                    }
+                }
+                ToolbarItem(placement: .secondaryAction) {
                     Toggle(isOn: $showArchived) {
                         Label("Show Archived", systemImage: "archivebox")
                     }
@@ -79,6 +91,7 @@ struct CatsView: View {
 
 struct CatCard: View {
     let cat: Cat
+    @AppStorage(PrefKey.weightUnit) private var unit: WeightUnit = .kg
 
     private var status: DueStatus? { cat.archived ? nil : cat.worstDueStatus }
 
@@ -88,7 +101,7 @@ struct CatCard: View {
             parts.append(cat.birthdayApprox ? "≈\(age)" : age)
         }
         if cat.sex != .unknown { parts.append(cat.sex.label.lowercased()) }
-        if let weight = cat.latestWeight { parts.append(Fmt.kg(weight.kg)) }
+        if let weight = cat.latestWeight { parts.append(unit.format(kilograms: weight.kg)) }
         return parts.isEmpty ? " " : parts.joined(separator: " · ")
     }
 

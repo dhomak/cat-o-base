@@ -33,6 +33,19 @@ enum Fmt {
         }
     }
 
+    /// "12.5%"
+    static func percent(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(1))) + "%"
+    }
+
+    /// "+3.1%", "−12.5%"
+    static func signedPercent(_ value: Double) -> String {
+        let magnitude = percent(abs(value))
+        if value > 0 { return "+" + magnitude }
+        if value < 0 { return "−" + magnitude }
+        return magnitude
+    }
+
     /// "daily", "weekly", "every 90 days"
     static func interval(days: Int) -> String {
         switch days {
