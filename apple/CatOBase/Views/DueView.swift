@@ -43,6 +43,7 @@ struct DueView: View {
                     NavigationLink(value: item.cat) {
                         DueRow(item: item)
                     }
+                    .help("Open \(item.cat.displayName). Swipe right or right-click to mark as given today.")
                     .swipeActions(edge: .leading) {
                         Button {
                             withAnimation { DueActions.markGiven(item, in: context) }

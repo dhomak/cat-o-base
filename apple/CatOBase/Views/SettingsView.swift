@@ -184,6 +184,7 @@ extension SettingsView {
                     }
                 }
                 .disabled(testSent)
+                .help("Sends a notification in 5 seconds to check reminders work")
             }
         } header: {
             Text("Reminders")
@@ -197,11 +198,13 @@ extension SettingsView {
             Button(action: exportBackup) {
                 Label("Export Backup…", systemImage: "square.and.arrow.up")
             }
+            .help("Save everything, including photos and documents, to one file")
             Button {
                 importing = true
             } label: {
                 Label("Import…", systemImage: "square.and.arrow.down")
             }
+            .help("Load a backup from this app or the Cat-o-Base web app")
         } header: {
             Text("Backup")
         } footer: {

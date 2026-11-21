@@ -27,6 +27,7 @@ struct PhotosSection: View {
                             PhotoTile(photo: photo, isProfile: photo.uuid == cat.profilePhoto?.uuid)
                         }
                         .buttonStyle(.plain)
+                        .help(photoTooltip(photo, isProfile: photo.uuid == cat.profilePhoto?.uuid))
                     }
                 }
                 .padding(.vertical, 4)
@@ -42,11 +43,20 @@ struct PhotosSection: View {
                 PhotosPicker(selection: $pickerItems, maxSelectionCount: 30, matching: .images) {
                     Label("Add Photos", systemImage: "plus")
                 }
+                .help("Add up to 30 photos from your library")
                 .onChange(of: pickerItems) { _, items in
                     importPhotos(items)
                 }
             }
         }
+    }
+
+    private func photoTooltip(_ photo: CatPhoto, isProfile: Bool) -> String {
+        var parts: [String] = []
+        if !photo.caption.isEmpty { parts.append(photo.caption) }
+        if let taken = photo.takenOn { parts.append(Fmt.date(taken)) }
+        if isProfile { parts.append("profile photo") }
+        return parts.isEmpty ? "Open photo" : parts.joined(separator: " · ")
     }
 
     private func importPhotos(_ items: [PhotosPickerItem]) {
@@ -177,6 +187,7 @@ struct PhotoViewer: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Done") { dismiss() }
+                .help("Close")
         }
         ToolbarItemGroup(placement: .primaryAction) {
             Button {
@@ -186,6 +197,7 @@ struct PhotoViewer: View {
             }
             .disabled(index <= 0)
             .keyboardShortcut(.leftArrow, modifiers: [])
+            .help("Previous photo (←)")
 
             Button {
                 step(1)
@@ -194,6 +206,7 @@ struct PhotoViewer: View {
             }
             .disabled(index >= photos.count - 1)
             .keyboardShortcut(.rightArrow, modifiers: [])
+            .help("Next photo (→)")
 
             if let photo = current {
                 Menu {
@@ -225,6 +238,7 @@ struct PhotoViewer: View {
                 } label: {
                     Label("More", systemImage: "ellipsis.circle")
                 }
+                .help("Use as profile photo, caption, share or delete")
             }
         }
     }

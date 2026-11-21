@@ -56,6 +56,7 @@ struct AvatarCropView: View {
                         }
                         .buttonStyle(.bordered)
                         .disabled(detecting)
+                        .help("Find the cat in the photo and centre on it")
 
                         Button {
                             withAnimation { reset(image) }
@@ -63,6 +64,7 @@ struct AvatarCropView: View {
                             Label("Reset", systemImage: "arrow.counterclockwise")
                         }
                         .buttonStyle(.bordered)
+                        .help("Show the whole photo")
                     }
 
                     Text("Drag to move. Pinch or use the slider to zoom.")
@@ -145,6 +147,7 @@ struct AvatarCropView: View {
                 .simultaneously(with: pinchGesture(width: width, height: height))
         )
         .accessibilityLabel("Photo crop area")
+        .help("Drag to move. Pinch on the trackpad, or use the slider, to zoom.")
     }
 
     private var zoomSlider: some View {
@@ -164,6 +167,7 @@ struct AvatarCropView: View {
             Image(systemName: "plus.magnifyingglass").foregroundStyle(.secondary)
         }
         .padding(.horizontal, 24)
+        .help("Zoom")
     }
 
     // MARK: Gestures

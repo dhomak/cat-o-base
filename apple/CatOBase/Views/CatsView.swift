@@ -48,6 +48,7 @@ struct CatsView: View {
                         Label("Add Cat", systemImage: "plus")
                     }
                     .keyboardShortcut("n", modifiers: .command)
+                    .help("Add a cat (⌘N)")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Menu {
@@ -59,6 +60,7 @@ struct CatsView: View {
                     } label: {
                         Label("Sort by", systemImage: "arrow.up.arrow.down")
                     }
+                    .help("Sort cats by name or age")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Button {
@@ -66,11 +68,13 @@ struct CatsView: View {
                     } label: {
                         Label("Sitter Sheet", systemImage: "doc.text.image")
                     }
+                    .help("Make a printable care sheet for all cats")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Toggle(isOn: $showArchived) {
                         Label("Show Archived", systemImage: "archivebox")
                     }
+                    .help(showArchived ? "Show current cats" : "Show archived cats")
                 }
             }
             .sheet(isPresented: $showingNewCat) {
@@ -121,6 +125,13 @@ struct CatCard: View {
 
     private var status: DueStatus? { cat.archived ? nil : cat.worstDueStatus }
 
+    /// "Rabies: 5 days overdue · Bravecto: in 6 days"
+    private var tooltip: String {
+        let urgent = cat.dueItems.filter { $0.status != .later }.prefix(3)
+        guard !urgent.isEmpty else { return "Open \(cat.displayName)" }
+        return urgent.map { "\($0.title): \(Fmt.relativeDue($0.date))" }.joined(separator: " · ")
+    }
+
     private var subtitle: String {
         var parts: [String] = []
         if let age = Fmt.age(from: cat.birthday) {
@@ -164,6 +175,7 @@ struct CatCard: View {
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .help(tooltip)
         .accessibilityElement(children: .combine)
     }
 }

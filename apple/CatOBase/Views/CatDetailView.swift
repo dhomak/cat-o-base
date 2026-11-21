@@ -98,6 +98,7 @@ struct CatDetailView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Edit") { editing = true }
                     .keyboardShortcut("e", modifiers: .command)
+                    .help("Edit details (⌘E)")
             }
             ToolbarItem(placement: .secondaryAction) {
                 Button {
@@ -105,6 +106,7 @@ struct CatDetailView: View {
                 } label: {
                     Label("Sitter Sheet", systemImage: "doc.text.image")
                 }
+                .help("Make a printable care sheet for this cat")
             }
             ToolbarItem(placement: .secondaryAction) {
                 Button {
@@ -113,6 +115,7 @@ struct CatDetailView: View {
                     Label(cat.archived ? "Unarchive" : "Archive",
                           systemImage: cat.archived ? "tray.and.arrow.up" : "archivebox")
                 }
+                .help(cat.archived ? "Move back to the main list" : "Hide from the main list but keep all records")
             }
             ToolbarItem(placement: .secondaryAction) {
                 Button(role: .destructive) {
@@ -120,6 +123,7 @@ struct CatDetailView: View {
                 } label: {
                     Label("Delete Cat", systemImage: "trash")
                 }
+                .help("Delete this cat and all its records")
             }
         }
         .sheet(isPresented: $editing) {
@@ -169,6 +173,7 @@ struct CatDetailView: View {
             Section("Coming up") {
                 ForEach(due) { item in
                     DueRow(item: item, showCat: false)
+                        .help("Swipe right or right-click to mark as given today")
                         .swipeActions(edge: .leading) {
                             Button {
                                 withAnimation { DueActions.markGiven(item, in: context) }
@@ -187,6 +192,7 @@ struct CatDetailView: View {
             let all = sortedVaccinations
             ForEach(all) { vaccination in
                 VaccinationRow(vaccination: vaccination, isCurrent: vaccination.isCurrent(among: all))
+                    .help("Click to edit. Right-click to record the next dose or delete.")
                     .onTapGesture { healthSheet = .editVaccination(vaccination) }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
@@ -210,6 +216,7 @@ struct CatDetailView: View {
             } label: {
                 Label("Add Vaccination", systemImage: "plus")
             }
+            .help("Record a vaccination")
         }
     }
 
@@ -220,6 +227,7 @@ struct CatDetailView: View {
                     withAnimation { treatment.markGiven() }
                 }
                 .onTapGesture { healthSheet = .editTreatment(treatment) }
+                .help("Click to edit. Right-click to stop, resume or delete.")
                 .swipeActions(edge: .leading) {
                     if treatment.active {
                         Button {
@@ -258,6 +266,7 @@ struct CatDetailView: View {
             } label: {
                 Label("Add Medication or Treatment", systemImage: "plus")
             }
+            .help("Add a medication, flea/tick or deworming treatment, or supplement")
         }
     }
 
@@ -280,6 +289,7 @@ struct CatDetailView: View {
                     }
                     .accessibilityAddTraits(cat.profilePhoto != nil ? .isButton : [])
                     .accessibilityLabel("Adjust profile photo")
+                    .help(cat.profilePhoto != nil ? "Adjust the round profile photo" : "Add photos below, or choose one in Edit")
                 Text(cat.displayName)
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)

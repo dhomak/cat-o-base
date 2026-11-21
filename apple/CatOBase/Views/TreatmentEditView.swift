@@ -73,6 +73,7 @@ struct TreatmentEditView: View {
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                                     .tint(intervalDays == preset.1 ? .accentColor : .secondary)
+                                    .help("Repeat \(Fmt.interval(days: preset.1))")
                             }
                         }
                     }

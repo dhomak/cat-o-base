@@ -63,6 +63,7 @@ struct VaccinationRow: View {
         }
         .opacity(isCurrent ? 1 : 0.55)
         .contentShape(Rectangle())
+        .help(isCurrent ? "" : "A newer dose of this vaccine has been recorded")
     }
 
     private func dueColor(_ date: Date) -> Color {
@@ -95,6 +96,7 @@ struct TreatmentRow: View {
             Spacer(minLength: 8)
             if treatment.active {
                 Button("Given", systemImage: "checkmark", action: onGiven)
+                    .help("Mark as given today and move the next due date forward")
                     .labelStyle(.titleAndIcon)
                     .buttonStyle(.bordered)
                     .controlSize(.small)

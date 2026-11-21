@@ -26,6 +26,7 @@ struct DocumentsSection: View {
                     DocumentRow(document: document)
                 }
                 .buttonStyle(.plain)
+                .help("\(document.filename): click to preview. Right-click to rename or delete.")
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         context.delete(document)
@@ -53,6 +54,7 @@ struct DocumentsSection: View {
             } label: {
                 Label("Add Document", systemImage: "plus")
             }
+            .help("Add PDFs, images or other files, like lab results or certificates")
             .fileImporter(isPresented: $importing,
                           allowedContentTypes: [.pdf, .image, .plainText, .item],
                           allowsMultipleSelection: true,

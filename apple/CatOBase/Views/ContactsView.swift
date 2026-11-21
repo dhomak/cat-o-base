@@ -26,6 +26,7 @@ struct ContactsView: View {
                             ContactRow(contact: contact)
                                 .contentShape(Rectangle())
                                 .onTapGesture { editing = contact }
+                                .help("Click to edit. Right-click to delete.")
                                 .contextMenu {
                                     Button("Edit") { editing = contact }
                                     Button("Delete", role: .destructive) { context.delete(contact) }
@@ -45,6 +46,7 @@ struct ContactsView: View {
                     } label: {
                         Label("Add Contact", systemImage: "plus")
                     }
+                    .help("Add a vet, clinic, insurer or sitter")
                 }
             }
             .sheet(isPresented: $creating) {

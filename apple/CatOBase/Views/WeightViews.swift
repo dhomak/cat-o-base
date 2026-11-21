@@ -49,6 +49,7 @@ struct WeightSection: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .help("Chart time range")
                     WeightChart(entries: chartEntries(in: range, from: entries), unit: unit)
                         .frame(height: 190)
                         .padding(.vertical, 4)
@@ -69,6 +70,7 @@ struct WeightSection: View {
             Button(action: onLog) {
                 Label("Log Weight", systemImage: "plus")
             }
+            .help("Record a weigh-in")
         }
     }
 
@@ -170,6 +172,7 @@ struct WeightChart: View {
             AxisMarks(position: .leading)
         }
         .accessibilityLabel("Weight chart")
+        .help("Hover or drag across the chart to see each weigh-in")
     }
 
     private func yDomain(for points: [WeightPoint]) -> ClosedRange<Double> {
@@ -315,6 +318,7 @@ struct WeightHistoryView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { editing = entry }
+                .help("Click to edit. Right-click to delete.")
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         context.delete(entry)

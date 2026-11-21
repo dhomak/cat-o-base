@@ -179,6 +179,7 @@ struct SuggestionChips: View {
                     Button(suggestion) { pick(suggestion) }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                        .help("Fill in \"\(suggestion)\"")
                 }
             }
         }
