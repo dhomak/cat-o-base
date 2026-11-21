@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% block title %}{{ c.name }}{% endblock %}
+{% macro del(kind, id) -%}
+<form method="post" action="{{ url_for('delete', kind=kind, rid=id) }}" class="inline" data-confirm="Delete this entry?">
+  <button class="x" title="Delete">×</button></form>
+{%- endmacro %}
+{% block body %}
+
+<section class="hero panel">
+  <div class="hero-ph">
+    {% if profile %}<img src="{{ url_for('media', name=profile.filename) }}" alt="{{ c.name }}">
+    {% else %}<div class="noph big">=^.^=</div>{% endif %}
+  </div>
+  <div class="hero-info">
+    <h1>{{ c.name }} {% if c.archived %}<span class="chip">archived</span>{% endif %}</h1>
+    <dl class="facts">
+      <div><dt>Age</dt><dd>{{ c.birthday|age }}{% if c.birthday_approx %} (approx.){% endif %}</dd></div>
+      <div><dt>Born</dt><dd>{{ c.birthday|d }}</dd></div>
+      <div><dt>Sex</dt><dd>{{ c.sex or '—' }}{% if c.neutered %}, neutered{% endif %}</dd></div>
+      <div><dt>Weight</dt><dd>{% if trend %}{{ '%g'|format(trend.kg) }} kg{% else %}—{% endif %}</dd></div>
+      <div><dt>Breed</dt><dd>{{ c.breed or '—' }}</dd></div>
+      <div><dt>Markings</dt><dd>{{ c.markings or '—' }}</dd></div>
+      <div><dt>Microchip</dt><dd class="mono">{{ c.microchip or '—' }}</dd></div>
+      <div><dt>Gotcha day</dt><dd>{{ c.adoption_date|d }}</dd></div>
+    </dl>
+    <div class="actions">
+      <a class="btn" href="{{ url_for('cat_form', cid=c.id) }}">Edit</a>
+      <a class="btn ghost" href="{{ url_for('sitter', cat=c.id) }}">Sitter sheet</a>
+    </div>
+  </div>
+</section>
+
+{% if c.special_needs or c.allergies %}
+<section class="panel callout">
+  {% if c.special_needs %}<h3>Special needs</h3><p class="pre">{{ c.special_needs }}</p>{% endif %}
+  {% if c.allergies %}<h3>Allergies / intolerances</h3><p class="pre">{{ c.allergies }}</p>{% endif %}
+</section>
+{% endif %}
+
+<nav class="jump">
+  <a href="#due">Due</a><a href="#vaccine">Vaccines</a><a href="#treatment">Meds</a><a href="#weight">Weight</a>
+  <a href="#food">Food</a><a href="#visit">Vet visits</a><a href="#document">Documents</a><a href="#photo">Photos</a><a href="#log">Journal</a>
+</nav>
+
+<section class="panel" id="due">
+  <h2>Coming up</h2>
+  {% with items=due, show_cat=False, back='cat' %}{% include "_due.html" %}{% endwith %}
+</section>
+
+<div class="two">
+<section class="panel" id="vaccine">
+  <h2>Vaccinations</h2>
+  {% if vaccines %}
+  <table>
+    <tr><th>Vaccine</th><th>Given</th><th>Next due</th><th></th></tr>
+    {% for v in vaccines %}{% set st = due_status(v.next_due) %}
+    <tr><td>{{ v.name }}{% if v.vet or v.notes %}<div class="sub">{{ v.vet or '' }}{% if v.vet and v.notes %} · {% endif %}{{ v.notes or '' }}</div>{% endif %}</td>
+        <td>{{ v.date_given|d }}</td>
+        <td class="{{ st[0] }}">{{ v.next_due|d }}</td>
+        <td>{{ del('vaccine', v.id) }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No vaccinations recorded.</p>{% endif %}
+  <details><summary>+ add vaccination</summary>
+    <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='vaccine') }}" class="form">
+      <div class="grid">
+        <label>Vaccine *<input name="name" list="vaxlist" required placeholder="Rabies"></label>
+        <label>Date given<input type="date" name="date_given" value="{{ today() }}"></label>
+        <label>Repeats
+          <select name="repeat_months"><option value="">— set date manually —</option>
+            <option value="12" selected>every year</option><option value="36">every 3 years</option>
+            <option value="1">in 1 month (booster)</option><option value="6">in 6 months</option></select></label>
+        <label>…or next due<input type="date" name="next_due"></label>
+        <label>Vet / clinic<input name="vet"></label>
+        <label>Notes<input name="notes" placeholder="batch #, reaction…"></label>
+      </div>
+      <datalist id="vaxlist"><option>Rabies</option><option>FVRCP (tricat)</option><option>FeLV</option><option>FIP</option><option>Chlamydia</option></datalist>
+      <button class="btn">Add</button>
+    </form>
+  </details>
+</section>
+
+<section class="panel" id="treatment">
+  <h2>Medications &amp; treatments</h2>
+  {% if treatments %}
+  <ul class="list">
+    {% for t in treatments %}{% set st = due_status(t.next_due) %}
+    <li class="{% if not t.active %}inactive{% endif %}">
+      <div class="li-main">
+        <span class="tag">{{ (t.kind or 'other')|upper }}</span> <b>{{ t.name }}</b>{% if t.dose %} — {{ t.dose }}{% endif %}
+        <div class="sub">
+          {% if t.schedule %}{{ t.schedule }} · {% endif %}
+          {% if t.interval_days %}every {{ t.interval_days }} d · {% endif %}
+          last {{ t.last_given|d }}
+          {% if t.next_due and t.active %} · next <span class="{{ st[0] }}">{{ t.next_due|d }} ({{ st[1] }})</span>{% endif %}
+          {% if t.end_date %} · until {{ t.end_date|d }}{% endif %}
+          {% if not t.active %} · stopped{% endif %}
+        </div>
+        {% if t.notes %}<div class="sub pre">{{ t.notes }}</div>{% endif %}
+      </div>
+      <div class="li-act">
+        {% if t.active %}
+        <form method="post" action="{{ url_for('treatment_done', tid=t.id) }}" class="inline"><button class="btn tiny" title="Mark given today">✓ given</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('treatment_toggle', tid=t.id) }}" class="inline"><button class="btn tiny ghost">{{ 'stop' if t.active else 'resume' }}</button></form>
+        {{ del('treatment', t.id) }}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">No medications or treatments.</p>{% endif %}
+  <details><summary>+ add medication / treatment</summary>
+    <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='treatment') }}" class="form">
+      <div class="grid">
+        <label>Type<select name="kind">
+          <option value="medication">medication</option><option value="flea/tick">flea / tick</option>
+          <option value="deworming">deworming</option><option value="supplement">supplement</option>
+          <option value="other">other</option></select></label>
+        <label>Name *<input name="name" required placeholder="Bravecto, Milbemax…"></label>
+        <label>Dose<input name="dose" placeholder="½ tablet"></label>
+        <label>Schedule (text)<input name="schedule" placeholder="twice daily with food"></label>
+        <label>Repeat every N days<input type="number" name="interval_days" min="1" placeholder="90"></label>
+        <label>Last given<input type="date" name="last_given" value="{{ today() }}"></label>
+        <label>…or next due<input type="date" name="next_due"></label>
+        <label>End date (course)<input type="date" name="end_date"></label>
+      </div>
+      <label>Notes<textarea name="notes" rows="2" placeholder="how to give it, side effects to watch…"></textarea></label>
+      <button class="btn">Add</button>
+    </form>
+  </details>
+</section>
+</div>
+
+<section class="panel" id="weight">
+  <h2>Weight</h2>
+  {% if trend %}
+  <p class="trend">
+    <b>{{ '%g'|format(trend.kg) }} kg</b>
+    {% if trend.delta is defined %}<span class="{{ 'down' if trend.delta < 0 else 'up' }}">{{ '%+g'|format(trend.delta) }} kg since last</span>{% endif %}
+    {% if trend.pct is defined %}<span class="{% if trend.warn %}overdue{% endif %}">{{ '%+.1f'|format(trend.pct) }}% since {{ trend.since|d }}</span>{% endif %}
+  </p>
+  {% if trend.warn %}<p class="flash">Down 10% or more in about six months. Worth mentioning to the vet.</p>{% endif %}
+  {% endif %}
+  {% if chart %}{{ chart }}{% elif weights %}<p class="muted small">Add another weigh-in to see the chart.</p>{% endif %}
+  <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='weight') }}" class="form inline-form">
+    <input type="date" name="date" value="{{ today() }}">
+    <input name="kg" inputmode="decimal" placeholder="4.2" required size="6">
+    <select name="unit"><option>kg</option><option>lb</option></select>
+    <button class="btn">Log weight</button>
+  </form>
+  {% if weights %}
+  <details><summary>History ({{ weights|length }})</summary>
+    <table>{% for w in weights %}<tr><td>{{ w.date|d }}</td><td>{{ '%g'|format(w.kg) }} kg</td><td>{{ del('weight', w.id) }}</td></tr>{% endfor %}</table>
+  </details>
+  {% endif %}
+</section>
+
+<section class="panel" id="food">
+  <div class="row-head"><h2>Food</h2><a class="btn tiny ghost" href="{{ url_for('cat_form', cid=c.id) }}">edit</a></div>
+  {% if c.food_brand or c.food_portion or c.food_schedule or c.food_notes %}
+  <dl class="facts">
+    <div><dt>Food</dt><dd>{{ c.food_brand or '—' }}</dd></div>
+    <div><dt>Portion</dt><dd>{{ c.food_portion or '—' }}</dd></div>
+    <div><dt>Schedule</dt><dd>{{ c.food_schedule or '—' }}</dd></div>
+  </dl>
+  {% if c.food_notes %}<p class="pre">{{ c.food_notes }}</p>{% endif %}
+  {% else %}<p class="muted">No food details yet.</p>{% endif %}
+  {% if c.notes %}<h3>Notes</h3><p class="pre">{{ c.notes }}</p>{% endif %}
+</section>
+
+<div class="two">
+<section class="panel" id="visit">
+  <h2>Vet visits</h2>
+  {% if visits %}
+  <ul class="list">
+    {% for v in visits %}
+    <li><div class="li-main"><b>{{ v.date|d }}</b>{% if v.clinic %} · {{ v.clinic }}{% endif %}{% if v.cost %} · {{ v.cost }}{% endif %}
+      {% if v.reason %}<div>{{ v.reason }}</div>{% endif %}
+      {% if v.outcome %}<div class="sub pre">{{ v.outcome }}</div>{% endif %}
+      {% if v.notes %}<div class="sub pre">{{ v.notes }}</div>{% endif %}</div>
+      <div class="li-act">{{ del('visit', v.id) }}</div></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">No visits logged.</p>{% endif %}
+  <details><summary>+ log a visit</summary>
+    <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='visit') }}" class="form">
+      <div class="grid">
+        <label>Date<input type="date" name="date" value="{{ today() }}"></label>
+        <label>Clinic / vet<input name="clinic"></label>
+        <label>Cost<input name="cost" placeholder="₪350"></label>
+      </div>
+      <label>Reason<input name="reason" placeholder="annual check-up"></label>
+      <label>Outcome / diagnosis<textarea name="outcome" rows="2"></textarea></label>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <button class="btn">Add</button>
+    </form>
+  </details>
+</section>
+
+<section class="panel" id="document">
+  <h2>Documents</h2>
+  {% if documents %}
+  <ul class="list">
+    {% for d in documents %}
+    <li><div class="li-main"><a href="{{ url_for('document', did=d.id) }}" target="_blank">📄 {{ d.title }}</a>
+      <div class="sub">{{ d.created_at|d }}</div></div>
+      <div class="li-act"><a class="btn tiny ghost" href="{{ url_for('document', did=d.id, dl=1) }}">↓</a>{{ del('document', d.id) }}</div></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">Lab results, vaccination certificates, insurance papers…</p>{% endif %}
+  <form method="post" action="{{ url_for('add_document', cid=c.id) }}" enctype="multipart/form-data" class="form">
+    <div class="grid">
+      <label>Title<input name="title" placeholder="Bloodwork Nov 2026"></label>
+      <label>File<input type="file" name="file" required></label>
+    </div>
+    <button class="btn">Upload</button>
+  </form>
+</section>
+</div>
+
+<section class="panel" id="photo">
+  <h2>Photos</h2>
+  {% if photos %}
+  <div class="gallery">
+    {% for p in photos %}
+    <figure class="{% if profile and p.id == profile.id %}is-profile{% endif %}">
+      <a href="{{ url_for('media', name=p.filename) }}" target="_blank"><img src="{{ url_for('media', name='t_' ~ p.filename) }}" loading="lazy" alt=""></a>
+      <figcaption>{{ p.caption or '' }}{% if p.taken_on %} <span class="sub">{{ p.taken_on|d }}</span>{% endif %}
+        <span class="ph-act">
+        {% if not (profile and p.id == profile.id) %}
+        <form method="post" action="{{ url_for('photo_profile', pid=p.id) }}" class="inline"><button class="btn tiny ghost" title="Use as profile photo">★</button></form>
+        {% endif %}{{ del('photo', p.id) }}</span>
+      </figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <form method="post" action="{{ url_for('add_photos', cid=c.id) }}" enctype="multipart/form-data" class="form">
+    <div class="grid">
+      <label>Photos<input type="file" name="photos" accept="image/*" multiple required></label>
+      <label>Caption (optional)<input name="caption"></label>
+      <label>Taken on<input type="date" name="taken_on"></label>
+    </div>
+    <button class="btn">Upload</button>
+  </form>
+</section>
+
+<section class="panel" id="log">
+  <h2>Journal</h2>
+  <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='log') }}" class="form">
+    <div class="grid">
+      <label>Date<input type="date" name="date" value="{{ today() }}"></label>
+      <label>Kind<select name="kind">
+        {% for k in ['note','grooming','nails','litter','behaviour','appetite','food trial','symptom'] %}<option>{{ k }}</option>{% endfor %}
+      </select></label>
+    </div>
+    <label><textarea name="text" rows="2" required placeholder="Threw up a hairball, otherwise fine…"></textarea></label>
+    <button class="btn">Add entry</button>
+  </form>
+  {% if logs %}
+  <ul class="list">
+    {% for l in logs %}
+    <li><div class="li-main"><span class="tag">{{ (l.kind or 'note')|upper }}</span> <b>{{ l.date|d }}</b><div class="pre">{{ l.text }}</div></div>
+      <div class="li-act">{{ del('log', l.id) }}</div></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

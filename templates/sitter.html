@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Sitter sheet{% endblock %}
+{% block bodyclass %}sitter{% endblock %}
+{% block body %}
+<div class="row-head noprint">
+  <h2>Sitter sheet</h2>
+  <button class="btn" onclick="window.print()">Print / save as PDF</button>
+</div>
+
+<div class="sheet">
+  <header class="sheet-head">
+    <h1>Cat care sheet</h1>
+    <p>Updated {{ generated|d }}</p>
+  </header>
+
+  {% if contacts %}
+  <section class="sheet-contacts">
+    <h2>Contacts</h2>
+    <table>{% for k in contacts %}
+      <tr><th>{{ k.role or '' }}</th><td>{{ k.name }}</td><td>{{ k.phone or '' }}</td><td>{{ k.address or '' }}{% if k.notes %} — {{ k.notes }}{% endif %}</td></tr>
+    {% endfor %}</table>
+  </section>
+  {% endif %}
+
+  {% for c in cats %}
+  <article class="sheet-cat">
+    <div class="sc-head">
+      {% if c.photo %}<img src="{{ url_for('media', name='t_' ~ c.photo) }}" alt="">{% endif %}
+      <div>
+        <h2>{{ c.name }}</h2>
+        <p>{{ c.birthday|age }} · {{ c.sex or '' }}{% if c.markings %} · {{ c.markings }}{% endif %}{% if c.microchip %} · chip {{ c.microchip }}{% endif %}</p>
+      </div>
+    </div>
+    <dl>
+      <dt>Food</dt><dd>{{ c.food_brand or '—' }}{% if c.food_portion %}, {{ c.food_portion }}{% endif %}{% if c.food_schedule %}, {{ c.food_schedule }}{% endif %}
+        {% if c.food_notes %}<div class="pre">{{ c.food_notes }}</div>{% endif %}</dd>
+      {% if meds.get(c.id) %}<dt>Medication</dt><dd><ul>{% for t in meds[c.id] %}
+        <li><b>{{ t.name }}</b>{% if t.dose %} — {{ t.dose }}{% endif %}{% if t.schedule %}, {{ t.schedule }}{% endif %}
+          {% if t.next_due %} (next: {{ t.next_due|d }}){% endif %}{% if t.notes %}<div class="pre">{{ t.notes }}</div>{% endif %}</li>{% endfor %}</ul></dd>{% endif %}
+      {% if c.special_needs %}<dt>Special needs</dt><dd class="pre">{{ c.special_needs }}</dd>{% endif %}
+      {% if c.allergies %}<dt>Allergies</dt><dd class="pre">{{ c.allergies }}</dd>{% endif %}
+      {% if c.notes %}<dt>Good to know</dt><dd class="pre">{{ c.notes }}</dd>{% endif %}
+    </dl>
+  </article>
+  {% else %}
+  <p>No cats yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

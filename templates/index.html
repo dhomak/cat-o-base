@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block body %}
+{% if not arch %}
+<section class="panel">
+  <h2>Due in the next 60 days</h2>
+  {% with items=due, show_cat=True, back='index' %}{% include "_due.html" %}{% endwith %}
+</section>
+{% endif %}
+
+<div class="row-head">
+  <h2>{{ 'Archived' if arch else 'Cats' }}</h2>
+  {% if arch %}<a class="btn ghost" href="{{ url_for('index') }}">← back</a>
+  {% elif n_arch %}<a class="btn ghost" href="{{ url_for('index', archived=1) }}">archived ({{ n_arch }})</a>{% endif %}
+</div>
+
+<div class="cards">
+  {% for c in cats %}{% set al = alerts.get(c.id, ()) %}
+  <a class="card {% if 'overdue' in al %}alert{% elif 'soon' in al %}warn{% endif %}" href="{{ url_for('cat', cid=c.id) }}">
+    <div class="ph">
+      {% if c.photo %}<img src="{{ url_for('media', name='t_' ~ c.photo) }}" alt="{{ c.name }}" loading="lazy">
+      {% else %}<div class="noph">=^.^=</div>{% endif %}
+    </div>
+    <div class="meta">
+      <h3>{{ c.name }}</h3>
+      <p>{{ c.birthday|age }}{% if c.birthday_approx %}≈{% endif %}
+         {% if c.sex %} · {{ c.sex }}{% endif %}{% if c.kg %} · {{ '%g'|format(c.kg) }} kg{% endif %}</p>
+      <div class="chips">
+        {% if 'overdue' in al %}<span class="chip red">overdue</span>{% elif 'soon' in al %}<span class="chip amber">due soon</span>{% endif %}
+        {% if c.special_needs %}<span class="chip mag">special needs</span>{% endif %}
+        {% if c.allergies %}<span class="chip mag">allergies</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+  {% if not arch %}
+  <a class="card add" href="{{ url_for('cat_form') }}"><span>+</span><p>Add a cat</p></a>
+  {% endif %}
+</div>
+{% endblock %}

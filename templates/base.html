@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Cats{% endblock %} · Cat-o-Base</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="icon" href="{{ url_for('static', filename='icon.svg') }}">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1d21" media="(prefers-color-scheme: dark)">
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+<header class="top">
+  <a href="{{ url_for('index') }}" class="logo"><img src="{{ url_for('static', filename='icon.svg') }}" alt="">Cat-o-Base</a>
+  <nav>
+    <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="on"{% endif %}>Cats</a>
+    <a href="{{ url_for('due_page') }}" {% if request.endpoint=='due_page' %}class="on"{% endif %}>Due</a>
+    <a href="{{ url_for('contacts') }}" {% if request.endpoint=='contacts' %}class="on"{% endif %}>Contacts</a>
+    <a href="{{ url_for('sitter') }}">Sitter sheet</a>
+    <a href="{{ url_for('backup_page') }}" {% if request.endpoint=='backup_page' %}class="on"{% endif %}>Backup</a>
+  </nav>
+</header>
+<main>
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+  {% block body %}{% endblock %}
+</main>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

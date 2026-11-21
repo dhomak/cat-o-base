@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Backup{% endblock %}
+{% block body %}
+<section class="panel">
+  <h2>Backup</h2>
+  <p class="muted small">Data directory: <code>{{ data_dir }}</code> · media {{ '%.1f'|format(media_mb) }} MB ·
+    {% for t, n in counts.items() %}{{ t }} {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('backup_zip') }}">↓ Full backup (.zip, with photos)</a>
+    <a class="btn ghost" href="{{ url_for('export_json') }}">↓ Data only (.json)</a>
+  </div>
+</section>
+
+<section class="panel danger">
+  <h2>Restore</h2>
+  <p>Replaces <b>everything</b> in this instance with the contents of a full-backup .zip.</p>
+  <form method="post" action="{{ url_for('restore') }}" enctype="multipart/form-data" class="form">
+    <div class="grid">
+      <label>Backup .zip<input type="file" name="file" accept=".zip" required></label>
+      <label>Type RESTORE<input name="confirm" autocomplete="off"></label>
+    </div>
+    <button class="btn red">Restore</button>
+  </form>
+</section>
+{% endblock %}

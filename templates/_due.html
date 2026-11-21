@@ -1,0 +1,20 @@
+{# expects: items, show_cat (bool), back #}
+{% if items %}
+<ul class="due">
+  {% for d in items %}{% set st = due_status(d.due) %}
+  <li class="{{ st[0] }}">
+    <span class="tag">{{ 'VAX' if d.kind=='vaccine' else 'RX' }}</span>
+    <span class="what">{% if show_cat %}<a href="{{ url_for('cat', cid=d.cat_id) }}">{{ d.cat }}</a> · {% endif %}{{ d.item }}</span>
+    <span class="when">{{ d.due|d }} <em>{{ st[1] }}</em></span>
+    {% if d.kind == 'treatment' %}
+    <form method="post" action="{{ url_for('treatment_done', tid=d.id) }}" class="inline">
+      <input type="hidden" name="back" value="{{ back }}">
+      <button class="btn tiny" title="Mark given today">✓ done</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">Nothing due. Everyone's up to date.</p>
+{% endif %}
