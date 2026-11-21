@@ -66,9 +66,17 @@ struct CatShareView: View {
                                   subject: Text(cat.displayName),
                                   message: Text(summary),
                                   preview: SharePreview("\(cat.displayName).catobase", image: previewImage)) {
-                            Label("Share \(cat.displayName)…", systemImage: "square.and.arrow.up")
+                            shareRow("Share File and Text", detail: "Messages, Mail, AirDrop",
+                                     systemImage: "square.and.arrow.up")
                         }
-                        .help("Send the cat file with a text summary: Messages, Telegram, Mail, AirDrop…")
+                        .help("Sends the cat file with the readable summary")
+
+                        ShareLink(item: fileURL,
+                                  preview: SharePreview("\(cat.displayName).catobase", image: previewImage)) {
+                            shareRow("Share File Only", detail: "Telegram, WhatsApp and apps that drop the text",
+                                     systemImage: "doc")
+                        }
+                        .help("Some apps, like Telegram, send only the text when given both. Use this there.")
                     } else {
                         HStack {
                             ProgressView()
@@ -76,12 +84,13 @@ struct CatShareView: View {
                         }
                     }
                     ShareLink(item: summary, subject: Text(cat.displayName)) {
-                        Label("Share as Text Only", systemImage: "text.bubble")
+                        shareRow("Share Text Only", detail: "For people without Cat-o-Base",
+                                 systemImage: "text.bubble")
                     }
                     .help("Just the readable summary, no file")
                 } footer: {
                     if let fileSize {
-                        Text("File size: \(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)). Anyone with Cat-o-Base can open the file to add \(cat.displayName) to their Guest Cats; everyone else sees the text.")
+                        Text("File size: \(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)). Anyone with Cat-o-Base can open the file to add \(cat.displayName) to their Guest Cats. In Telegram, send the file and the text separately.")
                     }
                 }
 
@@ -117,6 +126,17 @@ struct CatShareView: View {
         #if os(macOS)
         .frame(minWidth: 460, minHeight: 640)
         #endif
+    }
+
+    private func shareRow(_ title: String, detail: String, systemImage: String) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: systemImage)
+        }
     }
 
     private var previewImage: Image {
