@@ -81,6 +81,8 @@ struct CatEditView: View {
                         .autocorrectionDisabled()
                 }
 
+                guestSections
+
                 Section("Dates") {
                     OptionalDatePicker("Birthday", date: $draft.birthday)
                     if draft.birthday != nil {
@@ -109,8 +111,6 @@ struct CatEditView: View {
                     TextField("Personality, quirks, how to give pills…", text: $draft.notes, axis: .vertical)
                         .lineLimit(3...10)
                 }
-
-                guestSections
             }
             .formStyle(.grouped)
             .navigationTitle(cat == nil ? (draft.isGuest ? "New Guest Cat" : "New Cat") : "Edit Cat")
