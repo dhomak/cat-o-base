@@ -10,6 +10,9 @@ struct CatDetailView: View {
     @State private var confirmingDelete = false
     @State private var healthSheet: HealthSheet?
     @AppStorage(PrefKey.weightUnit) private var unit: WeightUnit = .kg
+    @State private var viewer: PhotoViewerStart?
+    @State private var cropTarget: CatPhoto?
+    @State private var pendingCrop: CatPhoto?
 
     enum HealthSheet: Identifiable, Hashable {
         case newVaccination, editVaccination(Vaccination)
@@ -65,6 +68,8 @@ struct CatDetailView: View {
             vaccinationsSection
             treatmentsSection
             WeightSection(cat: cat) { healthSheet = .logWeight }
+            PhotosSection(cat: cat) { index in viewer = PhotoViewerStart(index: index) }
+            DocumentsSection(cat: cat)
 
             Section("Food") {
                 if hasFood {
@@ -124,6 +129,20 @@ struct CatDetailView: View {
             case .logWeight:
                 WeightEntryEditView(cat: cat, entry: nil)
             }
+        }
+        .coverOrSheet(item: $viewer, onDismiss: {
+            // "Use as Profile Photo" closes the viewer first, then opens the crop editor.
+            if let photo = pendingCrop {
+                pendingCrop = nil
+                cropTarget = photo
+            }
+        }) { start in
+            PhotoViewer(cat: cat, startIndex: start.index) { photo in
+                pendingCrop = photo
+            }
+        }
+        .sheet(item: $cropTarget) { photo in
+            AvatarCropView(photo: photo)
         }
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
@@ -236,6 +255,21 @@ struct CatDetailView: View {
         Section {
             VStack(spacing: 10) {
                 CatAvatar(cat: cat, size: 140)
+                    .overlay(alignment: .bottomTrailing) {
+                        if cat.profilePhoto != nil {
+                            Image(systemName: "crop")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(7)
+                                .background(Color.accentColor, in: Circle())
+                                .offset(x: -4, y: -4)
+                        }
+                    }
+                    .onTapGesture {
+                        if let photo = cat.profilePhoto { cropTarget = photo }
+                    }
+                    .accessibilityAddTraits(cat.profilePhoto != nil ? .isButton : [])
+                    .accessibilityLabel("Adjust profile photo")
                 Text(cat.displayName)
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)

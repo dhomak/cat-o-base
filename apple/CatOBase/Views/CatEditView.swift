@@ -141,7 +141,7 @@ struct CatEditView: View {
         draft.apply(to: target)
 
         if let newPhoto {
-            let photo = CatPhoto(imageData: newPhoto.full, thumbnailData: newPhoto.thumbnail)
+            let photo = CatPhoto.make(from: newPhoto)
             context.insert(photo)
             photo.cat = target
             target.profilePhotoID = photo.uuid

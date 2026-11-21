@@ -196,6 +196,7 @@ final class CatDocument {
     /// Uniform Type Identifier, e.g. "com.adobe.pdf".
     var typeIdentifier: String = ""
     @Attribute(.externalStorage) var data: Data?
+    var byteCount: Int = 0
     var addedAt: Date = Date()
     var cat: Cat?
 
@@ -204,6 +205,7 @@ final class CatDocument {
         self.filename = filename
         self.typeIdentifier = typeIdentifier
         self.data = data
+        self.byteCount = data?.count ?? 0
     }
 }
 
