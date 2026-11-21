@@ -18,7 +18,7 @@ struct PhotosSection: View {
     private let columns = [GridItem(.adaptive(minimum: 96, maximum: 160), spacing: 8)]
 
     var body: some View {
-        Section("Photos") {
+        Section(title: "Photos") {
             let photos = cat.photosNewestFirst
             if !photos.isEmpty {
                 LazyVGrid(columns: columns, spacing: 8) {

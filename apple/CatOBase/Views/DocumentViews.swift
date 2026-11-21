@@ -22,7 +22,7 @@ struct DocumentsSection: View {
     }
 
     var body: some View {
-        Section("Documents") {
+        Section(title: "Documents") {
             ForEach(documents) { document in
                 Button {
                     preview(document)

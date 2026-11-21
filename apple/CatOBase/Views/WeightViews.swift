@@ -29,7 +29,7 @@ struct WeightSection: View {
     @State private var range: WeightRange = .year
 
     var body: some View {
-        Section("Weight") {
+        Section(title: "Weight") {
             if let trend = cat.weightTrend {
                 let entries = cat.weightsNewestFirst
                 summary(trend)

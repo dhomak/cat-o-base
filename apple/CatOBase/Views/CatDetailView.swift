@@ -59,7 +59,7 @@ struct CatDetailView: View {
 
             comingUpSection
 
-            Section("Details") {
+            Section(title: "Details") {
                 LabeledContent("Sex", value: sexText)
                 LabeledContent("Born", value: bornText)
                 LabeledContent("Gotcha day", value: Fmt.date(cat.adoptionDate))
@@ -79,7 +79,7 @@ struct CatDetailView: View {
             PhotosSection(cat: cat) { index in viewer = PhotoViewerStart(index: index) }
             DocumentsSection(cat: cat)
 
-            Section("Food") {
+            Section(title: "Food") {
                 if hasFood {
                     if !cat.foodBrand.trimmed.isEmpty { LabeledContent("Food", value: cat.foodBrand) }
                     if !cat.foodPortion.trimmed.isEmpty { LabeledContent("Portion", value: cat.foodPortion) }
@@ -91,7 +91,7 @@ struct CatDetailView: View {
             }
 
             if !cat.notes.trimmed.isEmpty {
-                Section("Notes") {
+                Section(title: "Notes") {
                     Text(cat.notes).textSelection(.enabled)
                 }
             }
@@ -232,7 +232,7 @@ struct CatDetailView: View {
         }
         let contacts = cat.guestContacts
         if !contacts.isEmpty {
-            Section(cat.guestFrom.isEmpty ? "Contacts" : "Contacts from \(cat.guestFrom)") {
+            Section(title: cat.guestFrom.isEmpty ? "Contacts" : "Contacts from \(cat.guestFrom)") {
                 ForEach(Array(contacts.enumerated()), id: \.offset) { _, contact in
                     GuestContactRow(contact: contact)
                 }
@@ -244,7 +244,7 @@ struct CatDetailView: View {
     private var comingUpSection: some View {
         let due = cat.dueItems
         if !due.isEmpty {
-            Section("Coming up") {
+            Section(title: "Coming up") {
                 ForEach(due) { item in
                     DueRow(item: item, showCat: false)
                         .help("Swipe right or right-click to mark as given today")
@@ -262,7 +262,7 @@ struct CatDetailView: View {
     }
 
     private var vaccinationsSection: some View {
-        Section("Vaccinations") {
+        Section(title: "Vaccinations") {
             let all = sortedVaccinations
             ForEach(all) { vaccination in
                 VaccinationRow(vaccination: vaccination, isCurrent: vaccination.isCurrent(among: all))
@@ -295,7 +295,7 @@ struct CatDetailView: View {
     }
 
     private var treatmentsSection: some View {
-        Section("Medications & treatments") {
+        Section(title: "Medications & treatments") {
             ForEach(sortedTreatments) { treatment in
                 TreatmentRow(treatment: treatment) {
                     withAnimation { treatment.markGiven() }

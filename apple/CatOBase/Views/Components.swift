@@ -126,10 +126,37 @@ extension View {
         #if os(macOS)
         self
             .listStyle(.inset)
-            .headerProminence(.increased)
             .environment(\.defaultMinListRowHeight, 36)
         #else
         self
         #endif
+    }
+}
+
+/// A list section title: large and bold on the Mac, the standard style on iPhone/iPad.
+struct SectionTitle: View {
+    let title: String
+
+    init(_ title: String) {
+        self.title = title
+    }
+
+    var body: some View {
+        #if os(macOS)
+        Text(title)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.primary)
+            .padding(.top, 14)
+            .padding(.bottom, 4)
+        #else
+        Text(title)
+        #endif
+    }
+}
+
+extension Section where Parent == SectionTitle, Footer == EmptyView, Content: View {
+    /// `Section(title: "Details") { … }` uses SectionTitle for the header.
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.init(content: content, header: { SectionTitle(title) })
     }
 }
