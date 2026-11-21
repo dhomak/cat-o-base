@@ -80,9 +80,15 @@ pip install -r requirements.txt
 python app.py          # http://localhost:8000, data goes into ./data
 ```
 
+## iPhone, iPad and Mac app
+
+A native SwiftUI version is in progress in [`apple/`](apple/). It stores data
+on the device, with iCloud sync planned. See [apple/README.md](apple/README.md).
+
 ## Project layout
 
 ```
+apple/              native SwiftUI app (iPhone, iPad, Mac)
 app.py              the whole backend (routes, DB schema, calendar, backup)
 templates/          Jinja templates
 static/             CSS, JS, icon

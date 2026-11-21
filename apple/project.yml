@@ -1,0 +1,50 @@
+# XcodeGen project definition. Generate the Xcode project with:
+#   brew install xcodegen   (once)
+#   cd apple && xcodegen
+# The generated CatOBase.xcodeproj is not committed; re-run xcodegen after pulling.
+name: CatOBase
+options:
+  bundleIdPrefix: com.arimanoff
+  deploymentTarget:
+    iOS: "27.0"
+    macOS: "27.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+targets:
+  CatOBase:
+    type: application
+    platform: auto
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: CatOBase
+    settings:
+      base:
+        PRODUCT_NAME: Cat-o-Base
+        PRODUCT_MODULE_NAME: CatOBase
+        PRODUCT_BUNDLE_IDENTIFIER: com.arimanoff.catobase
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Cat-o-Base
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Cat-o-Base uses your photo library to add photos of your cats."
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+        # macOS sandbox: user-picked files (photos, documents) only
+        "ENABLE_APP_SANDBOX[sdk=macosx*]": YES
+        "ENABLE_USER_SELECTED_FILES[sdk=macosx*]": readwrite
+        "ENABLE_HARDENED_RUNTIME[sdk=macosx*]": YES

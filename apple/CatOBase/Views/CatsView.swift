@@ -1,0 +1,122 @@
+import SwiftData
+import SwiftUI
+
+struct CatsView: View {
+    @Query(sort: \Cat.name) private var cats: [Cat]
+    @State private var showingNewCat = false
+    @State private var showArchived = false
+
+    private var visibleCats: [Cat] {
+        cats.filter { $0.archived == showArchived }
+    }
+
+    private let columns = [GridItem(.adaptive(minimum: 150, maximum: 220), spacing: 16)]
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if visibleCats.isEmpty {
+                    emptyState
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 16) {
+                            ForEach(visibleCats) { cat in
+                                NavigationLink(value: cat) {
+                                    CatCard(cat: cat)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding()
+                    }
+                }
+            }
+            .navigationTitle(showArchived ? "Archived" : "Cats")
+            .navigationDestination(for: Cat.self) { cat in
+                CatDetailView(cat: cat)
+            }
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingNewCat = true
+                    } label: {
+                        Label("Add Cat", systemImage: "plus")
+                    }
+                    .keyboardShortcut("n", modifiers: .command)
+                }
+                ToolbarItem(placement: .secondaryAction) {
+                    Toggle(isOn: $showArchived) {
+                        Label("Show Archived", systemImage: "archivebox")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingNewCat) {
+                CatEditView(cat: nil)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var emptyState: some View {
+        if showArchived {
+            ContentUnavailableView(
+                "No Archived Cats",
+                systemImage: "archivebox",
+                description: Text("Cats you archive appear here, with all their records kept.")
+            )
+        } else {
+            ContentUnavailableView {
+                Label("No Cats Yet", systemImage: "cat")
+            } description: {
+                Text("Add your first cat to start keeping records.")
+            } actions: {
+                Button("Add a Cat") { showingNewCat = true }
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+}
+
+struct CatCard: View {
+    let cat: Cat
+
+    private var subtitle: String {
+        var parts: [String] = []
+        if let age = Fmt.age(from: cat.birthday) {
+            parts.append(cat.birthdayApprox ? "≈\(age)" : age)
+        }
+        if cat.sex != .unknown { parts.append(cat.sex.label.lowercased()) }
+        if let weight = cat.latestWeight { parts.append(Fmt.kg(weight.kg)) }
+        return parts.isEmpty ? " " : parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            CatAvatar(cat: cat, size: 112)
+            VStack(spacing: 2) {
+                Text(cat.displayName)
+                    .font(.headline)
+                    .lineLimit(1)
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            HStack(spacing: 4) {
+                if !cat.specialNeeds.trimmed.isEmpty { Pill("special needs", tint: .orange) }
+                if !cat.allergies.trimmed.isEmpty { Pill("allergies", tint: .orange) }
+            }
+            .frame(minHeight: 18)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+#Preview {
+    CatsView()
+        .modelContainer(PreviewData.container)
+}

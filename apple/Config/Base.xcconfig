@@ -1,0 +1,10 @@
+// Shared build settings for Cat-o-Base.
+//
+// Your signing team lives in Local.xcconfig (not committed). Create it next to
+// this file with one line:
+//
+//     DEVELOPMENT_TEAM = ABCDE12345
+//
+// See apple/README.md for how to find your team ID.
+
+#include? "Local.xcconfig"
