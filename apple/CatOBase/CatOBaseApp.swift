@@ -22,9 +22,33 @@ struct CatOBaseApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: WindowID.main) {
             RootView()
         }
         .modelContainer(container)
+        .commands {
+            CatOBaseCommands()
+            #if os(macOS)
+            // File → Import from iPhone: take a photo or scan a document (Continuity Camera).
+            ImportFromDevicesCommands()
+            #endif
+        }
+
+        // One cat in its own window (Mac, and iPad with multiple windows).
+        WindowGroup("Cat", id: WindowID.cat, for: PersistentIdentifier.self) { $id in
+            if let id {
+                CatWindowView(id: id)
+            }
+        }
+        .modelContainer(container)
+
+        #if os(macOS)
+        // Cat-o-Base → Settings… (⌘,)
+        Settings {
+            SettingsView()
+                .frame(width: 520, height: 680)
+        }
+        .modelContainer(container)
+        #endif
     }
 }

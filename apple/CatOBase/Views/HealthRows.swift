@@ -105,6 +105,7 @@ struct TreatmentRow: View {
         }
         .opacity(treatment.active ? 1 : 0.55)
         .contentShape(Rectangle())
+        .sensoryFeedback(.success, trigger: treatment.lastGiven)
     }
 
     private var statusLine: String {

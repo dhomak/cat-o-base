@@ -9,11 +9,21 @@ struct CatsView: View {
     @State private var sitterSheetURL: URL?
     @State private var showingNewCat = false
     @State private var showingNewGuest = false
+    @State private var search = ""
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
     @State private var showArchived = false
     @AppStorage(PrefKey.catSort) private var sort: CatSort = .name
 
     private var visibleCats: [Cat] {
-        sort.sorted(cats.filter { $0.archived == showArchived })
+        let query = search.trimmed
+        let shown = cats.filter { cat in
+            guard cat.archived == showArchived else { return false }
+            guard !query.isEmpty else { return true }
+            return [cat.name, cat.breed, cat.markings, cat.guestFrom, cat.microchip]
+                .contains { $0.localizedCaseInsensitiveContains(query) }
+        }
+        return sort.sorted(shown)
     }
 
     private var myCats: [Cat] { visibleCats.filter { !$0.isGuest } }
@@ -45,9 +55,14 @@ struct CatsView: View {
             }
             .overlay {
                 if visibleCats.isEmpty {
-                    emptyState
+                    if search.trimmed.isEmpty {
+                        emptyState
+                    } else {
+                        ContentUnavailableView.search(text: search)
+                    }
                 }
             }
+            .searchable(text: $search, prompt: "Name, breed, owner, microchip")
             .navigationTitle(showArchived ? "Archived" : "Cats")
             .navigationDestination(for: Cat.self) { cat in
                 CatDetailView(cat: cat)
@@ -59,7 +74,9 @@ struct CatsView: View {
                     } label: {
                         Label("Add Cat", systemImage: "plus")
                     }
+                    #if os(iOS)
                     .keyboardShortcut("n", modifiers: .command)
+                    #endif
                     .help("Add a cat (⌘N)")
                 }
                 ToolbarItem(placement: .secondaryAction) {
@@ -68,7 +85,9 @@ struct CatsView: View {
                     } label: {
                         Label("New Guest Cat", systemImage: "person.2")
                     }
+                    #if os(iOS)
                     .keyboardShortcut("n", modifiers: [.command, .shift])
+                    #endif
                     .help("Add a cat you're looking after for someone (⇧⌘N)")
                 }
                 ToolbarItem(placement: .secondaryAction) {
@@ -129,6 +148,15 @@ struct CatsView: View {
                     CatCard(cat: cat)
                 }
                 .buttonStyle(.plain)
+                .contextMenu {
+                    if supportsMultipleWindows {
+                        Button {
+                            openWindow(id: WindowID.cat, value: cat.persistentModelID)
+                        } label: {
+                            Label("Open in New Window", systemImage: "macwindow.badge.plus")
+                        }
+                    }
+                }
             }
         }
     }

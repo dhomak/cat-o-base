@@ -16,6 +16,7 @@ struct CatDetailView: View {
     @State private var pendingCrop: CatPhoto?
     @State private var sitterSheetURL: URL?
     @State private var sharing = false
+    @State private var dropTargeted = false
 
     enum HealthSheet: Identifiable, Hashable {
         case newVaccination, editVaccination(Vaccination)
@@ -110,7 +111,9 @@ struct CatDetailView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Edit") { editing = true }
+                    #if os(iOS)
                     .keyboardShortcut("e", modifiers: .command)
+                    #endif
                     .help("Edit details (⌘E)")
             }
             ToolbarItem(placement: .secondaryAction) {
@@ -174,6 +177,33 @@ struct CatDetailView: View {
         .sheet(isPresented: $sharing) {
             CatShareView(cat: cat)
         }
+        // Menu bar (Mac) and hardware-keyboard commands for this cat.
+        .focusedSceneValue(\.catActions, CatActions(
+            name: cat.displayName,
+            id: cat.persistentModelID,
+            edit: { editing = true },
+            logWeight: { healthSheet = .logWeight },
+            addVaccination: { healthSheet = .newVaccination },
+            addTreatment: { healthSheet = .newTreatment },
+            share: { sharing = true },
+            sitterSheet: { sitterSheetURL = SitterSheetPDF.make(in: context, cats: [cat]) }
+        ))
+        // Drop photos, PDFs or other files onto the page.
+        .onDrop(of: CatMedia.dropTypes, isTargeted: $dropTargeted) { providers in
+            CatMedia.handleDrop(providers, cat: cat, context: context)
+            return true
+        }
+        .overlay {
+            if dropTargeted { DropHighlight(catName: cat.displayName) }
+        }
+        #if os(macOS)
+        // File → Import from iPhone → Take Photo / Scan Documents.
+        .importableFromServices(for: ContinuityImport.self) { imports in
+            let items = imports.map(\.incoming)
+            Task { await CatMedia.add(items, to: cat, in: context) }
+            return true
+        }
+        #endif
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
             Button("Delete Cat and All Records", role: .destructive, action: deleteCat)

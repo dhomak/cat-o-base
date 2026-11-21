@@ -8,6 +8,12 @@ enum AppTab: Hashable {
 /// Tabs on iPhone; a sidebar on iPad and Mac.
 struct RootView: View {
     @State private var tab: AppTab = .cats
+    @State private var newCat: NewCatKind?
+
+    enum NewCatKind: String, Identifiable {
+        case own, guest
+        var id: String { rawValue }
+    }
     @Query(filter: #Predicate<Cat> { $0.archived == false }) private var activeCats: [Cat]
     @Environment(\.scenePhase) private var scenePhase
 
@@ -52,11 +58,21 @@ struct RootView: View {
             Tab("Contacts", systemImage: "phone", value: AppTab.contacts) {
                 ContactsView()
             }
+            #if os(iOS)
+            // On the Mac, Settings is its own window (⌘,).
             Tab("Settings", systemImage: "gearshape", value: AppTab.settings) {
                 SettingsView()
             }
+            #endif
         }
         .tabViewStyle(.sidebarAdaptable)
+        .focusedSceneValue(\.appActions, AppActions(
+            newCat: { newCat = .own },
+            newGuestCat: { newCat = .guest }
+        ))
+        .sheet(item: $newCat) { kind in
+            CatEditView(cat: nil, startAsGuest: kind == .guest)
+        }
         .task(id: reminderSignature) {
             // Short pause so a burst of edits reschedules once.
             try? await Task.sleep(for: .milliseconds(600))

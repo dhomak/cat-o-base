@@ -98,3 +98,22 @@ struct CalloutRow: View {
         .padding(.vertical, 2)
     }
 }
+
+/// Shown over a cat's page while files are dragged onto it.
+struct DropHighlight: View {
+    let catName: String
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 3, dash: [10, 6]))
+            .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                Label("Drop photos or documents for \(catName)", systemImage: "square.and.arrow.down")
+                    .font(.headline)
+                    .padding(12)
+                    .background(.regularMaterial, in: Capsule())
+            }
+            .padding(8)
+            .allowsHitTesting(false)
+    }
+}

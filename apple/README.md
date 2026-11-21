@@ -4,7 +4,7 @@ A native SwiftUI app. One app target runs on iOS, iPadOS and macOS 27.
 Data is stored on the device with SwiftData; the model is ready for iCloud
 sync later.
 
-**Status:** phase 6 of 8, plus cat sharing. Share a cat (choosing what to
+**Status:** phase 7 of 8, plus cat sharing. Share a cat (choosing what to
 include) through Messages, Telegram and the rest; received cats appear under
 Guest Cats. Camera and document scanner. Sitter sheet PDF, backup and import (including
 from the web app), due-date reminders, cats (sortable by name or age), round profile
@@ -79,6 +79,28 @@ Telegram, Mail, Files or Finder) adds the cat under **Guest Cats**. Sharing
 the same cat again lets them update their copy. Shares are snapshots: there's
 no live sync, which would need iCloud.
 
+## Keyboard shortcuts (Mac, and iPad with a keyboard)
+
+| | |
+|---|---|
+| ⌘N / ⇧⌘N | New cat / new guest cat |
+| ⌥⌘N | New window |
+| ⌘E | Edit the cat |
+| ⌥⌘L | Log weight |
+| ⌥⌘V / ⌥⌘M | Add vaccination / medication |
+| ⇧⌘S | Share the cat |
+| ⌘P | Sitter sheet |
+| ⇧⌘O | Open the cat in a new window |
+| ← → | Previous / next photo in the viewer |
+| ⌘, | Settings (Mac) |
+
+Drag photos or PDFs onto a cat's page to add them. On the Mac, **File → Import
+from iPhone** takes a photo or scans a document with your phone.
+
+## App icon
+
+See [ICON.md](ICON.md): make a 1024 × 1024 PNG and run `tools/make-icons.sh`.
+
 ## Free Apple account notes
 
 - The app runs for **7 days**, then needs re-installing from Xcode (⌘R).
@@ -111,5 +133,6 @@ CatOBase/
 5. **Reminders** ✅: local notifications for due dates, app icon badge
 6. **Sharing and backup** ✅: sitter sheet PDF, export/import, import from the
    Cat-o-Base web app
-7. **iPad and Mac polish:** menus, shortcuts, drag and drop, multiple windows
+7. **iPad and Mac polish** ✅: menus, shortcuts, drag and drop, multiple windows,
+   Continuity Camera, search
 8. **Later:** iCloud sync, widget, Siri/Shortcuts
