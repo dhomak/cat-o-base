@@ -17,9 +17,9 @@ struct CatEditView: View {
     @State private var showingLibrary = false
     @State private var showingCamera = false
 
-    init(cat: Cat?) {
+    init(cat: Cat?, startAsGuest: Bool = false) {
         self.cat = cat
-        _draft = State(initialValue: CatDraft(cat))
+        _draft = State(initialValue: CatDraft(cat, startAsGuest: startAsGuest))
     }
 
     private var currentAvatar: CGImage? {
@@ -109,9 +109,11 @@ struct CatEditView: View {
                     TextField("Personality, quirks, how to give pills…", text: $draft.notes, axis: .vertical)
                         .lineLimit(3...10)
                 }
+
+                guestSections
             }
             .formStyle(.grouped)
-            .navigationTitle(cat == nil ? "New Cat" : "Edit Cat")
+            .navigationTitle(cat == nil ? (draft.isGuest ? "New Guest Cat" : "New Cat") : "Edit Cat")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -136,6 +138,49 @@ struct CatEditView: View {
         #if os(macOS)
         .frame(minWidth: 480, minHeight: 600)
         #endif
+    }
+
+    @ViewBuilder
+    private var guestSections: some View {
+        Section {
+            Toggle("Guest cat", isOn: $draft.isGuest.animation())
+                .help("For a cat you're looking after for someone else")
+            if draft.isGuest {
+                TextField("Owner's name", text: $draft.guestFrom, prompt: Text("e.g. Anna"))
+                DatePicker("Staying since", selection: $draft.guestSince, displayedComponents: .date)
+            }
+        } header: {
+            Text("Guest")
+        } footer: {
+            Text(draft.isGuest
+                 ? "Listed under Guest Cats. The contacts below appear on this cat's page and sitter sheet."
+                 : "Turn on for a cat you're looking after, like a friend's cat you're babysitting.")
+        }
+
+        if draft.isGuest {
+            Section("Owner's contacts") {
+                ForEach($draft.guestContacts) { $contact in
+                    VStack(spacing: 6) {
+                        TextField("Role", text: $contact.role, prompt: Text("Owner, their vet…"))
+                            .font(.caption.weight(.semibold))
+                        TextField("Name", text: $contact.name)
+                        TextField("Phone", text: $contact.phone)
+                            #if os(iOS)
+                            .keyboardType(.phonePad)
+                            #endif
+                    }
+                    .padding(.vertical, 2)
+                }
+                .onDelete { draft.guestContacts.remove(atOffsets: $0) }
+                Button {
+                    let role = draft.guestContacts.contains { $0.role.lowercased() == "owner" } ? "Vet" : "Owner"
+                    draft.guestContacts.append(GuestContactDraft(role: role))
+                } label: {
+                    Label("Add Contact", systemImage: "plus")
+                }
+                .help("Add the owner, their vet or an emergency contact")
+            }
+        }
     }
 
     private func loadPhoto(_ item: PhotosPickerItem?) {
@@ -208,9 +253,23 @@ struct CatDraft {
     var foodSchedule = ""
     var foodNotes = ""
     var notes = ""
+    var isGuest = false
+    var guestFrom = ""
+    var guestSince = Date()
+    var guestContacts: [GuestContactDraft] = []
 
-    init(_ cat: Cat?) {
-        guard let cat else { return }
+    init(_ cat: Cat?, startAsGuest: Bool = false) {
+        guard let cat else {
+            if startAsGuest {
+                isGuest = true
+                guestContacts = [GuestContactDraft(role: "Owner")]
+            }
+            return
+        }
+        isGuest = cat.isGuest
+        guestFrom = cat.guestFrom
+        guestSince = cat.guestReceivedAt ?? Date()
+        guestContacts = cat.guestContacts.map { GuestContactDraft($0) }
         name = cat.name
         sex = cat.sex
         neutered = cat.neutered
@@ -246,6 +305,45 @@ struct CatDraft {
         cat.foodSchedule = foodSchedule.trimmed
         cat.foodNotes = foodNotes.trimmed
         cat.notes = notes.trimmed
+
+        cat.isGuest = isGuest
+        if isGuest {
+            cat.guestFrom = guestFrom.trimmed
+            cat.guestReceivedAt = guestSince
+            let contacts = guestContacts.map(\.dto).filter { !$0.name.isEmpty || !$0.phone.isEmpty }
+            cat.guestContactsData = contacts.isEmpty ? nil : try? JSONEncoder().encode(contacts)
+        } else {
+            cat.guestFrom = ""
+            cat.guestReceivedAt = nil
+            cat.guestContactsData = nil
+        }
+    }
+}
+
+/// An editable contact row for a guest cat.
+struct GuestContactDraft: Identifiable {
+    let id = UUID()
+    var role = ""
+    var name = ""
+    var phone = ""
+    var address = ""
+    var notes = ""
+
+    init(role: String = "") {
+        self.role = role
+    }
+
+    init(_ dto: ContactDTO) {
+        role = dto.role
+        name = dto.name
+        phone = dto.phone
+        address = dto.address
+        notes = dto.notes
+    }
+
+    var dto: ContactDTO {
+        ContactDTO(role: role.trimmed, name: name.trimmed, phone: phone.trimmed,
+                   address: address.trimmed, notes: notes.trimmed)
     }
 }
 

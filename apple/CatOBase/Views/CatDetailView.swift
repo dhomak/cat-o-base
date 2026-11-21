@@ -189,7 +189,9 @@ struct CatDetailView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(cat.guestFrom.isEmpty ? "Guest cat" : "Guest cat from \(cat.guestFrom)")
                         .font(.body.weight(.medium))
-                    Text("Received \(Fmt.date(cat.guestReceivedAt)). This is your own copy: edits stay on this device. If it's shared again, you can update it.")
+                    Text(cat.shareID == nil
+                         ? "Staying since \(Fmt.date(cat.guestReceivedAt))."
+                         : "Received \(Fmt.date(cat.guestReceivedAt)). Your own copy: edits stay on this device, and a new share from the owner can update it.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

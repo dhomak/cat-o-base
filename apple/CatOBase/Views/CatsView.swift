@@ -8,6 +8,7 @@ struct CatsView: View {
     @State private var path: [Cat] = []
     @State private var sitterSheetURL: URL?
     @State private var showingNewCat = false
+    @State private var showingNewGuest = false
     @State private var showArchived = false
     @AppStorage(PrefKey.catSort) private var sort: CatSort = .name
 
@@ -62,6 +63,15 @@ struct CatsView: View {
                     .help("Add a cat (⌘N)")
                 }
                 ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        showingNewGuest = true
+                    } label: {
+                        Label("New Guest Cat", systemImage: "person.2")
+                    }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .help("Add a cat you're looking after for someone (⇧⌘N)")
+                }
+                ToolbarItem(placement: .secondaryAction) {
                     Menu {
                         Picker("Sort by", selection: $sort) {
                             ForEach(CatSort.allCases) { option in
@@ -90,6 +100,9 @@ struct CatsView: View {
             }
             .sheet(isPresented: $showingNewCat) {
                 CatEditView(cat: nil)
+            }
+            .sheet(isPresented: $showingNewGuest) {
+                CatEditView(cat: nil, startAsGuest: true)
             }
         }
         .quickLookPreview($sitterSheetURL)
