@@ -96,6 +96,7 @@ struct CatDetailView: View {
                 }
             }
         }
+        .comfortableListOnMac()
         .navigationTitle(cat.displayName)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

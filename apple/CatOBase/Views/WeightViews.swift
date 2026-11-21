@@ -332,6 +332,7 @@ struct WeightHistoryView: View {
                 }
             }
         }
+        .comfortableListOnMac()
         .overlay {
             if entries.isEmpty {
                 ContentUnavailableView("No Weigh-ins", systemImage: "scalemass")

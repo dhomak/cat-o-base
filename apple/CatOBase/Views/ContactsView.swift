@@ -33,6 +33,7 @@ struct ContactsView: View {
                             for index in offsets { context.delete(contacts[index]) }
                         }
                     }
+                    .comfortableListOnMac()
                 }
             }
             .navigationTitle("Contacts")

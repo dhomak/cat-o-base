@@ -117,3 +117,19 @@ struct DropHighlight: View {
             .allowsHitTesting(false)
     }
 }
+
+extension View {
+    /// Mac lists default to tiny grey section titles and tight rows. Give them
+    /// prominent headers and more room; iPhone and iPad keep the system style.
+    @ViewBuilder
+    func comfortableListOnMac() -> some View {
+        #if os(macOS)
+        self
+            .listStyle(.inset)
+            .headerProminence(.increased)
+            .environment(\.defaultMinListRowHeight, 36)
+        #else
+        self
+        #endif
+    }
+}

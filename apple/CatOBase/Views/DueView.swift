@@ -19,6 +19,7 @@ struct DueView: View {
                 section("Next 2 weeks", items.filter { $0.status == .soon })
                 section("Later", items.filter { $0.status == .later })
             }
+            .comfortableListOnMac()
             .overlay {
                 if items.isEmpty {
                     ContentUnavailableView(
