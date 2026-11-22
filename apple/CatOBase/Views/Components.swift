@@ -4,6 +4,7 @@ import SwiftUI
 struct AvatarCircle: View {
     let image: CGImage?
     var size: CGFloat
+    var species: Species = .other
 
     var body: some View {
         ZStack {
@@ -13,8 +14,7 @@ struct AvatarCircle: View {
                     .scaledToFill()
             } else {
                 Circle().fill(Color.accentColor.opacity(0.15))
-                Image(systemName: "pawprint.fill")
-                    .font(.system(size: size * 0.42))
+                SpeciesGlyph(species: species, size: size * 0.42)
                     .foregroundStyle(Color.accentColor)
             }
         }
@@ -30,7 +30,7 @@ struct CatAvatar: View {
     var size: CGFloat
 
     var body: some View {
-        AvatarCircle(image: cat.profilePhoto?.thumbnailImage, size: size)
+        AvatarCircle(image: cat.profilePhoto?.thumbnailImage, size: size, species: cat.species)
     }
 }
 

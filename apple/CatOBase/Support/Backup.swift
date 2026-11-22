@@ -30,6 +30,8 @@ struct BackupFile: Codable, Sendable {
 
 struct CatDTO: Codable, Sendable {
     var name = ""
+    /// Missing in files from before species existed: those are cats.
+    var species: String?
     var sex = ""
     var neutered = false
     var breed = ""
@@ -163,12 +165,13 @@ enum BackupExporter {
 
     static var defaultFilename: String {
         let day = Date.now.formatted(.iso8601.year().month().day())
-        return "Cat-o-Base Backup \(day)"
+        return "Pet-o-Base Backup \(day)"
     }
 
     static func dto(_ cat: Cat) -> CatDTO {
         var dto = CatDTO()
         dto.name = cat.name
+        dto.species = cat.speciesRaw
         dto.sex = cat.sexRaw
         dto.neutered = cat.neutered
         dto.breed = cat.breed
@@ -244,9 +247,9 @@ struct BackupDocument: FileDocument {
 
 enum BackupSource: String {
     case catShare = "Shared pet"
-    case app = "Cat-o-Base app backup"
-    case webZip = "Cat-o-Base web full backup"
-    case webJSON = "Cat-o-Base web data export (no photos)"
+    case app = "Pet-o-Base app backup"
+    case webZip = "Pet-o-Base web full backup"
+    case webJSON = "Pet-o-Base web data export (no photos)"
 }
 
 enum BackupError: LocalizedError {
@@ -257,9 +260,9 @@ enum BackupError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unreadable: return "The file couldn't be read."
-        case .unknownFormat: return "This isn't a Cat-o-Base backup."
+        case .unknownFormat: return "This isn't a Pet-o-Base backup."
         case .newerVersion(let version):
-            return "This backup was made by a newer version of Cat-o-Base (format \(version)). Update the app first."
+            return "This backup was made by a newer version of Pet-o-Base (format \(version)). Update the app first."
         }
     }
 }
@@ -378,6 +381,7 @@ enum BackupImporter {
         var photoCount = 0
         var documentCount = 0
         let cat = Cat(name: dto.name)
+        cat.speciesRaw = Species(rawValue: dto.species ?? "cat")?.rawValue ?? Species.other.rawValue
         cat.sexRaw = CatSex(rawValue: dto.sex)?.rawValue ?? CatSex.unknown.rawValue
         cat.neutered = dto.neutered
         cat.breed = dto.breed

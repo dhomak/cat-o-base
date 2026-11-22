@@ -3,7 +3,7 @@ import Foundation
 import SQLite3
 import UniformTypeIdentifiers
 
-/// Imports data from the Cat-o-Base web app: its "Full backup" zip (SQLite
+/// Imports data from the Pet-o-Base web app: its "Full backup" zip (SQLite
 /// database plus media folder) or its "Data only" JSON export.
 enum WebImport {
     typealias Row = [String: SQLValue]

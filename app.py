@@ -1,4 +1,4 @@
-"""Cat-o-Base — a small self-hosted records app for cats.
+"""Pet-o-Base — a small self-hosted records app for cats.
 
 Flask + SQLite. All data (database + uploaded media) lives in CATOBASE_DATA
 (default ./data). Run with gunicorn: gunicorn -w 2 -b 0.0.0.0:8000 app:app
@@ -577,8 +577,8 @@ def _ics_text(s):
 @app.route("/calendar.ics")
 def calendar_ics():
     stamp = dt.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-    L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Cat-o-Base//EN", "CALSCALE:GREGORIAN",
-         "METHOD:PUBLISH", "X-WR-CALNAME:Cat-o-Base", "REFRESH-INTERVAL;VALUE=DURATION:PT6H"]
+    L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Pet-o-Base//EN", "CALSCALE:GREGORIAN",
+         "METHOD:PUBLISH", "X-WR-CALNAME:Pet-o-Base", "REFRESH-INTERVAL;VALUE=DURATION:PT6H"]
 
     def event(uid, d, summary, rrule=None, alarm=False):
         L.extend(["BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{stamp}",
@@ -669,7 +669,7 @@ def restore():
             names = z.namelist()
             db_name = next((n for n in (DB_NAME, *LEGACY_DB_NAMES) if n in names), None)
             if not db_name:
-                raise ValueError(f"not a Cat-o-Base backup (no {DB_NAME} inside)")
+                raise ValueError(f"not a Pet-o-Base backup (no {DB_NAME} inside)")
             for n in names:
                 base = n[6:] if n.startswith("media/") else None
                 if n == db_name or (base and "/" not in base and not base.startswith(".")

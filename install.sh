@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cat-o-Base installer / updater. Run as root INSIDE a Debian 12/13 container or VM.
+# Pet-o-Base installer / updater. Run as root INSIDE a Debian 12/13 container or VM.
 #   ./install.sh                     install, or update an existing install (data is kept)
 #   CATOBASE_PORT=8080 ./install.sh  use a different port
 set -euo pipefail
@@ -50,7 +50,7 @@ echo "==> Setting up Python environment"
 echo "==> Installing service"
 cat >/etc/systemd/system/$NAME.service <<EOF
 [Unit]
-Description=Cat-o-Base
+Description=Pet-o-Base
 After=network-online.target
 Wants=network-online.target
 
@@ -71,7 +71,7 @@ systemctl enable -q $NAME
 systemctl restart $NAME
 sleep 2
 if systemctl is-active --quiet $NAME; then
-  echo "==> Cat-o-Base is running: http://$(hostname -I | awk '{print $1}'):$PORT"
+  echo "==> Pet-o-Base is running: http://$(hostname -I | awk '{print $1}'):$PORT"
 else
   echo "!! Service failed to start:"; journalctl -u $NAME -n 30 --no-pager; exit 1
 fi

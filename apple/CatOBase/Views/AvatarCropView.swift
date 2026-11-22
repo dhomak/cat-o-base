@@ -55,7 +55,7 @@ struct AvatarCropView: View {
                             }
                         }
                         .buttonStyle(.bordered)
-                        .disabled(detecting)
+                        .disabled(detecting || !(photo.cat?.species.supportsAutoCentring ?? true))
                         .help("Find the cat or dog in the photo and centre on it")
 
                         Button {

@@ -127,7 +127,7 @@ enum ReminderScheduler {
     /// A notification in five seconds, to check that reminders get through.
     static func sendTest() async {
         let content = UNMutableNotificationContent()
-        content.title = "Cat-o-Base"
+        content.title = "Pet-o-Base"
         content.body = "Reminders are working. 🐾"
         content.sound = .default
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)

@@ -1,6 +1,6 @@
-# Installing Cat-o-Base on Proxmox
+# Installing Pet-o-Base on Proxmox
 
-This guide sets up Cat-o-Base in its own small LXC container. It takes about
+This guide sets up Pet-o-Base in its own small LXC container. It takes about
 ten minutes. The steps use the Proxmox web UI wherever possible. A
 command-line version is at the end.
 
@@ -8,7 +8,7 @@ Contents:
 
 1. [Download the Debian template](#1-download-the-debian-template)
 2. [Create the container](#2-create-the-container)
-3. [Install Cat-o-Base](#3-install-cat-o-base)
+3. [Install Pet-o-Base](#3-install-cat-o-base)
 4. [Open it](#4-open-it)
 5. [Optional: a nice address via a reverse proxy](#5-optional-a-nice-address-via-a-reverse-proxy)
 6. [Updating](#updating)
@@ -54,7 +54,7 @@ to *Yes*.
 > Debian containers don't allow root logins with a password over SSH, so the
 > key is how you'll connect.
 
-## 3. Install Cat-o-Base
+## 3. Install Pet-o-Base
 
 Open the container's console: select the container, click the arrow next to
 **Console** and choose **xterm.js** (it lets you paste). Log in as `root`.
@@ -84,7 +84,7 @@ The installer:
 When it finishes, it prints the address, for example:
 
 ```
-==> Cat-o-Base is running: http://192.168.1.67:8000
+==> Pet-o-Base is running: http://192.168.1.67:8000
 ```
 
 ## 4. Open it
@@ -113,7 +113,7 @@ With **Nginx Proxy Manager**:
    client_max_body_size 200m;
    ```
 5. If it's reachable from outside your home network, add an **Access List**
-   with a username and password. Cat-o-Base has no login of its own.
+   with a username and password. Pet-o-Base has no login of its own.
 
 Caddy, Traefik and plain nginx work the same way: proxy to `http://<ip>:8000`.
 

@@ -20,7 +20,7 @@ struct CatsView: View {
         let shown = cats.filter { cat in
             guard cat.archived == showArchived else { return false }
             guard !query.isEmpty else { return true }
-            return [cat.name, cat.breed, cat.markings, cat.guestFrom, cat.microchip]
+            return [cat.name, cat.breed, cat.markings, cat.guestFrom, cat.microchip, cat.species.label]
                 .contains { $0.localizedCaseInsensitiveContains(query) }
         }
         return sort.sorted(shown)
@@ -62,7 +62,7 @@ struct CatsView: View {
                     }
                 }
             }
-            .searchable(text: $search, prompt: "Name, breed, owner, microchip")
+            .searchable(text: $search, prompt: "Name, species, breed, owner, chip")
             .navigationTitle(showArchived ? "Archived" : "Pets")
             .navigationDestination(for: Cat.self) { cat in
                 CatDetailView(cat: cat)
@@ -215,9 +215,14 @@ struct CatCard: View {
         VStack(spacing: 10) {
             CatAvatar(cat: cat, size: 112)
             VStack(spacing: 2) {
-                Text(cat.displayName)
-                    .font(.headline)
-                    .lineLimit(1)
+                HStack(spacing: 5) {
+                    SpeciesIcon(species: cat.species)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(cat.displayName)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
                 Text(subtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

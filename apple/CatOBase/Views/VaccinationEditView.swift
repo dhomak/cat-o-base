@@ -47,8 +47,6 @@ struct VaccinationEditView: View {
     @State private var notes: String
     @State private var confirmingDelete = false
 
-    /// Common cat and dog vaccines; any name can be typed.
-    private static let suggestions = ["Rabies", "FVRCP (tricat)", "FeLV", "DHPP", "Leptospirosis", "Bordetella"]
 
     init(cat: Cat, vaccination: Vaccination?) {
         self.cat = cat
@@ -87,8 +85,10 @@ struct VaccinationEditView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Vaccine", text: $name, prompt: Text("e.g. Rabies"))
-                    SuggestionChips(suggestions: Self.suggestions) { name = $0 }
+                    TextField("Vaccine", text: $name, prompt: Text(cat.species.vaccineSuggestions.first.map { "e.g. \($0)" } ?? "Vaccine name"))
+                    if !cat.species.vaccineSuggestions.isEmpty {
+                        SuggestionChips(suggestions: cat.species.vaccineSuggestions) { name = $0 }
+                    }
                 }
 
                 Section("When") {

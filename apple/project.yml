@@ -30,21 +30,21 @@ targets:
         # security-scoped access, so reading a file in place works too.
         LSSupportsOpeningDocumentsInPlace: true
         CFBundleDocumentTypes:
-          - CFBundleTypeName: Cat-o-Base Cat
+          - CFBundleTypeName: Pet-o-Base Pet
             CFBundleTypeRole: Viewer
             LSHandlerRank: Owner
             LSItemContentTypes: [com.arimanoff.catobase.cat]
         UTExportedTypeDeclarations:
           - UTTypeIdentifier: com.arimanoff.catobase.cat
-            UTTypeDescription: Cat-o-Base Cat
+            UTTypeDescription: Pet-o-Base Pet
             UTTypeConformsTo: [public.data, public.content]
             UTTypeIconFiles: []
             UTTypeTagSpecification:
-              public.filename-extension: [catobase]
+              public.filename-extension: [petobase, catobase]
               public.mime-type: [application/x-catobase]
     settings:
       base:
-        PRODUCT_NAME: Cat-o-Base
+        PRODUCT_NAME: Pet-o-Base
         PRODUCT_MODULE_NAME: CatOBase
         PRODUCT_BUNDLE_IDENTIFIER: com.arimanoff.catobase
         MARKETING_VERSION: "0.1.0"
@@ -57,14 +57,14 @@ targets:
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Cat-o-Base
+        INFOPLIST_KEY_CFBundleDisplayName: Pet-o-Base
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Cat-o-Base uses your photo library to add photos of your cats."
-        INFOPLIST_KEY_NSCameraUsageDescription: "Cat-o-Base uses the camera to take photos of your cats and scan vet documents."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Pet-o-Base uses your photo library to add photos of your pets."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Pet-o-Base uses the camera to take photos of your pets and scan vet documents."
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES

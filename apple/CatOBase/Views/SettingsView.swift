@@ -141,7 +141,7 @@ struct SettingsView: View {
                 Button("Open Settings", action: openNotificationSettings)
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Allow notifications for Cat-o-Base in Settings to get due-date reminders.")
+                Text("Allow notifications for Pet-o-Base in Settings to get due-date reminders.")
             }
         }
     }
@@ -204,11 +204,11 @@ extension SettingsView {
             } label: {
                 Label("Import…", systemImage: "square.and.arrow.down")
             }
-            .help("Load a backup from this app or the Cat-o-Base web app")
+            .help("Load a backup from this app or the Pet-o-Base web app")
         } header: {
             Text("Backup")
         } footer: {
-            Text("A backup is one file with every pet, record, photo and document. Import takes backups from this app and from the Cat-o-Base web app (its Full backup .zip, or the data-only .json).")
+            Text("A backup is one file with every pet, record, photo and document. Import takes backups from this app and from the Pet-o-Base web app (its Full backup .zip, or the data-only .json).")
         }
     }
 
@@ -225,7 +225,7 @@ extension SettingsView {
         }
         Section {
             LabeledContent("Version", value: version)
-            Link("Cat-o-Base on GitHub", destination: URL(string: "https://github.com/dhomak/cat-o-base")!)
+            Link("Pet-o-Base on GitHub", destination: URL(string: "https://github.com/dhomak/cat-o-base")!)
         }
     }
 

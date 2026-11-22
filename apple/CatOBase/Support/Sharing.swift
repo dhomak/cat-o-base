@@ -4,7 +4,7 @@ import SwiftData
 import UniformTypeIdentifiers
 
 extension UTType {
-    /// A single shared cat (`.catobase`). Declared in project.yml (Info.plist).
+    /// A single shared pet (`.petobase`; older `.catobase` files too). Declared in project.yml.
     static let catobaseCat = UTType(exportedAs: "com.arimanoff.catobase.cat")
 }
 
@@ -93,7 +93,7 @@ struct ShareOptions: Hashable {
 
 @MainActor
 enum CatShareBuilder {
-    /// Writes `<Name>.catobase` to a temporary folder. Assigns the cat a share ID the
+    /// Writes `<Name>.petobase` to a temporary folder. Assigns the cat a share ID the
     /// first time, so the recipient can later update their copy from a re-send.
     static func makeFile(for cat: Cat, options: ShareOptions, sender: String,
                          ownContacts: [Contact], context: ModelContext) async -> URL? {
@@ -119,7 +119,7 @@ enum CatShareBuilder {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("share-\(UUID().uuidString)", isDirectory: true)
         let safeName = cat.displayName.replacingOccurrences(of: "/", with: "-")
-        let url = folder.appendingPathComponent("\(safeName).catobase")
+        let url = folder.appendingPathComponent("\(safeName).petobase")
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try data.write(to: url)
@@ -137,9 +137,9 @@ enum CatShareBuilder {
     /// A readable message for people without the app (and a preview for those with it).
     static func summary(for cat: Cat, options: ShareOptions, sender: String,
                         ownContacts: [Contact], unit: WeightUnit) -> String {
-        var lines: [String] = ["🐾 \(cat.displayName)"]
+        var lines: [String] = ["\(cat.species.emoji) \(cat.displayName)"]
 
-        var facts: [String] = []
+        var facts: [String] = [cat.species.label.lowercased()]
         if let age = Fmt.age(from: cat.birthday) { facts.append(cat.birthdayApprox ? "about \(age)" : age) }
         if cat.sex != .unknown { facts.append(cat.sex.label.lowercased() + (cat.neutered ? ", neutered" : "")) }
         if options.details {
@@ -204,7 +204,7 @@ enum CatShareBuilder {
         }
 
         let by = sender.trimmed.isEmpty ? "" : " by \(sender.trimmed)"
-        lines.append("\n— Shared from Cat-o-Base\(by)")
+        lines.append("\n— Shared from Pet-o-Base\(by)")
         return lines.joined(separator: "\n")
     }
 }

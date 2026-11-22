@@ -31,7 +31,7 @@ struct CatEditView: View {
             Form {
                 Section {
                     VStack(spacing: 10) {
-                        AvatarCircle(image: currentAvatar, size: 120)
+                        AvatarCircle(image: currentAvatar, size: 120, species: draft.species)
                             .overlay {
                                 if loadingPhoto { ProgressView() }
                             }
@@ -69,13 +69,23 @@ struct CatEditView: View {
 
                 Section("Basics") {
                     TextField("Name", text: $draft.name)
+                    Picker("Species", selection: $draft.species) {
+                        ForEach(Species.allCases) { species in
+                            Label {
+                                Text(species.label)
+                            } icon: {
+                                SpeciesIcon(species: species)
+                            }
+                            .tag(species)
+                        }
+                    }
                     Picker("Sex", selection: $draft.sex) {
                         ForEach(CatSex.allCases) { sex in
                             Text(sex.label).tag(sex)
                         }
                     }
                     Toggle("Neutered / spayed", isOn: $draft.neutered)
-                    TextField("Breed", text: $draft.breed, prompt: Text("e.g. domestic shorthair, beagle"))
+                    TextField("Breed", text: $draft.breed, prompt: Text(draft.species.breedHint))
                     TextField("Colour & markings", text: $draft.markings, prompt: Text("e.g. tabby, white socks"))
                     TextField("Microchip number", text: $draft.microchip)
                         .autocorrectionDisabled()
@@ -238,6 +248,7 @@ struct CatEditView: View {
 /// Editable copy of a cat's own fields.
 struct CatDraft {
     var name = ""
+    var species: Species = .cat
     var sex: CatSex = .unknown
     var neutered = false
     var breed = ""
@@ -271,6 +282,7 @@ struct CatDraft {
         guestSince = cat.guestReceivedAt ?? Date()
         guestContacts = cat.guestContacts.map { GuestContactDraft($0) }
         name = cat.name
+        species = cat.species
         sex = cat.sex
         neutered = cat.neutered
         breed = cat.breed
@@ -290,6 +302,7 @@ struct CatDraft {
 
     func apply(to cat: Cat) {
         cat.name = name.trimmed
+        cat.species = species
         cat.sex = sex
         cat.neutered = neutered
         cat.breed = breed.trimmed

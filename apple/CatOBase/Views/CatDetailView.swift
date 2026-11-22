@@ -60,6 +60,13 @@ struct CatDetailView: View {
             comingUpSection
 
             Section(title: "Details") {
+                LabeledContent("Species") {
+                    Label {
+                        Text(cat.species.label)
+                    } icon: {
+                        SpeciesIcon(species: cat.species)
+                    }
+                }
                 LabeledContent("Sex", value: sexText)
                 LabeledContent("Born", value: bornText)
                 LabeledContent("Gotcha day", value: Fmt.date(cat.adoptionDate))

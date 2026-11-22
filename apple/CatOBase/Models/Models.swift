@@ -11,6 +11,8 @@ import SwiftData
 @Model
 final class Cat {
     var name: String = ""
+    /// Species.rawValue. Existing records predate the field and are all cats.
+    var speciesRaw: String = "cat"
     var sexRaw: String = CatSex.unknown.rawValue
     var neutered: Bool = false
     var breed: String = ""

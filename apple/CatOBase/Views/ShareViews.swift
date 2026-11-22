@@ -65,14 +65,14 @@ struct CatShareView: View {
                         ShareLink(item: fileURL,
                                   subject: Text(cat.displayName),
                                   message: Text(summary),
-                                  preview: SharePreview("\(cat.displayName).catobase", image: previewImage)) {
+                                  preview: SharePreview("\(cat.displayName).petobase", image: previewImage)) {
                             shareRow("Share File and Text", detail: "Messages, Mail, AirDrop",
                                      systemImage: "square.and.arrow.up")
                         }
                         .help("Sends the pet file with the readable summary")
 
                         ShareLink(item: fileURL,
-                                  preview: SharePreview("\(cat.displayName).catobase", image: previewImage)) {
+                                  preview: SharePreview("\(cat.displayName).petobase", image: previewImage)) {
                             shareRow("Share File Only", detail: "Telegram, WhatsApp and apps that drop the text",
                                      systemImage: "doc")
                         }
@@ -84,13 +84,13 @@ struct CatShareView: View {
                         }
                     }
                     ShareLink(item: summary, subject: Text(cat.displayName)) {
-                        shareRow("Share Text Only", detail: "For people without Cat-o-Base",
+                        shareRow("Share Text Only", detail: "For people without Pet-o-Base",
                                  systemImage: "text.bubble")
                     }
                     .help("Just the readable summary, no file")
                 } footer: {
                     if let fileSize {
-                        Text("File size: \(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)). Anyone with Cat-o-Base can open the file to add \(cat.displayName) to their Guest Pets. In Telegram, send the file and the text separately.")
+                        Text("File size: \(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)). Anyone with Pet-o-Base can open the file to add \(cat.displayName) to their Guest Pets. In Telegram, send the file and the text separately.")
                     }
                 }
 
@@ -188,7 +188,8 @@ struct GuestReceiveView: View {
             Form {
                 Section {
                     VStack(spacing: 10) {
-                        AvatarCircle(image: avatar, size: 110)
+                        AvatarCircle(image: avatar, size: 110,
+                                     species: Species(rawValue: cat.species ?? "cat") ?? .other)
                         Text(cat.name.isEmpty ? "Unnamed pet" : cat.name)
                             .font(.title.bold())
                         Text(sender.isEmpty ? "Shared with you" : "Shared by \(sender)")

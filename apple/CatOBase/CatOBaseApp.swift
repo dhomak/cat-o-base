@@ -12,7 +12,7 @@ struct CatOBaseApp: App {
         do {
             return try ModelContainer(for: schema, configurations: configuration)
         } catch {
-            fatalError("Could not open the Cat-o-Base database: \(error)")
+            fatalError("Could not open the Pet-o-Base database: \(error)")
         }
     }()
 
@@ -43,7 +43,7 @@ struct CatOBaseApp: App {
         .modelContainer(container)
 
         #if os(macOS)
-        // Cat-o-Base → Settings… (⌘,)
+        // Pet-o-Base → Settings… (⌘,)
         Settings {
             SettingsView()
                 .frame(width: 520, height: 680)

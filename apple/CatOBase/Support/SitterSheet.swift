@@ -70,7 +70,7 @@ struct SitterPage: View {
     }
 
     private var facts: String {
-        var parts: [String] = []
+        var parts: [String] = [cat.species.label]
         if let age = Fmt.age(from: cat.birthday) { parts.append(cat.birthdayApprox ? "about \(age)" : age) }
         if cat.sex != .unknown { parts.append(cat.sex.label.lowercased() + (cat.neutered ? ", neutered" : "")) }
         if !cat.markings.isEmpty { parts.append(cat.markings) }
@@ -81,7 +81,7 @@ struct SitterPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 18) {
-                AvatarCircle(image: cat.profilePhoto?.thumbnailImage, size: 96)
+                AvatarCircle(image: cat.profilePhoto?.thumbnailImage, size: 96, species: cat.species)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(cat.displayName)
                         .font(.system(size: 30, weight: .bold))
@@ -155,7 +155,7 @@ struct SitterPage: View {
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(rule))
             }
 
-            Text("Updated \(Fmt.date(generated)) · Cat-o-Base")
+            Text("Updated \(Fmt.date(generated)) · Pet-o-Base")
                 .font(.system(size: 10))
                 .foregroundStyle(muted)
         }

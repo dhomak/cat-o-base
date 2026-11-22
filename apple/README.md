@@ -1,4 +1,4 @@
-# Cat-o-Base for iPhone, iPad and Mac
+# Pet-o-Base for iPhone, iPad and Mac
 
 A native SwiftUI app. One app target runs on iOS, iPadOS and macOS 27.
 Data is stored on the device with SwiftData; the model is ready for iCloud
@@ -74,7 +74,7 @@ automatically.
 
 On a cat's page, tap **Share**. Choose what to include, then send it with the
 standard share sheet. The recipient gets a readable summary plus a
-`Name.catobase` file; opening that file in Cat-o-Base (from Messages,
+`Name.catobase` file; opening that file in Pet-o-Base (from Messages,
 Telegram, Mail, Files or Finder) adds the cat under **Guest Cats**. Sharing
 the same cat again lets them update their copy. Shares are snapshots: there's
 no live sync, which would need iCloud.
@@ -132,7 +132,7 @@ CatOBase/
    editor with automatic cat detection
 5. **Reminders** ✅: local notifications for due dates, app icon badge
 6. **Sharing and backup** ✅: sitter sheet PDF, export/import, import from the
-   Cat-o-Base web app
+   Pet-o-Base web app
 7. **iPad and Mac polish** ✅: menus, shortcuts, drag and drop, multiple windows,
    Continuity Camera, search
 8. **Later:** iCloud sync, widget, Siri/Shortcuts

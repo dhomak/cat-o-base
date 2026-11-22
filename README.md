@@ -1,4 +1,4 @@
-# Cat-o-Base
+# Pet-o-Base
 
 A small self-hosted web app for keeping your cats' records in one place:
 vaccinations, medications, weight, vet visits, documents, photos, food and
@@ -56,7 +56,7 @@ updates, backups and troubleshooting.
 
 ## Security note
 
-Cat-o-Base has **no login**. It's meant for your home network or tailnet. If
+Pet-o-Base has **no login**. It's meant for your home network or tailnet. If
 you expose it to the internet, put it behind a reverse proxy with
 authentication (for example an Nginx Proxy Manager access list, Authelia or
 Cloudflare Access).
