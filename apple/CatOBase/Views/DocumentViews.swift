@@ -120,7 +120,8 @@ struct DocumentsSection: View {
     /// A scanned PDF, named by date; the rename prompt opens so it can get a proper title.
     private func addScan(_ pdf: Data) {
         let day = Date.now.formatted(.iso8601.year().month().day())
-        let document = CatDocument(title: "Scan \(Fmt.date(.now))", filename: "Scan \(day).pdf",
+        let today = Fmt.date(.now)
+        let document = CatDocument(title: String(localized: "Scan \(today)"), filename: String(localized: "Scan \(day)") + ".pdf",
                                    typeIdentifier: UTType.pdf.identifier, data: pdf)
         context.insert(document)
         document.cat = cat
@@ -135,13 +136,14 @@ struct DocumentsSection: View {
         Task {
             defer { photoItem = nil }
             guard let data = try? await item.loadTransferable(type: Data.self) else {
-                importError = "Couldn't read that photo."
+                importError = String(localized: "Couldn't read that photo.")
                 return
             }
             let type = item.supportedContentTypes.first(where: { $0.conforms(to: .image) }) ?? .jpeg
             let ext = type.preferredFilenameExtension ?? "jpg"
             let day = Date.now.formatted(.iso8601.year().month().day())
-            let document = CatDocument(title: "Photo \(Fmt.date(.now))", filename: "Photo \(day).\(ext)",
+            let today = Fmt.date(.now)
+            let document = CatDocument(title: String(localized: "Photo \(today)"), filename: String(localized: "Photo \(day)") + ".\(ext)",
                                        typeIdentifier: type.identifier, data: data)
             context.insert(document)
             document.cat = cat
@@ -183,7 +185,8 @@ struct DocumentsSection: View {
             }
             try? context.save()
             if !failures.isEmpty {
-                importError = "Couldn't read: " + failures.joined(separator: ", ")
+                let names = failures.joined(separator: ", ")
+                importError = String(localized: "Couldn't read: \(names)")
             }
         }
     }
@@ -194,14 +197,14 @@ struct DocumentsSection: View {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("documents", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let name = document.filename.isEmpty ? "Document" : document.filename
+        let name = document.filename.isEmpty ? String(localized: "Document") : document.filename
         let url = folder.appendingPathComponent(name)
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try data.write(to: url)
             previewURL = url
         } catch {
-            importError = "Couldn't open \(name)."
+            importError = String(localized: "Couldn't open \(name).")
         }
     }
 }

@@ -9,6 +9,14 @@ enum WeightRange: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var label: String {
+        switch self {
+        case .sixMonths: return String(localized: "6M", comment: "Chart range: six months")
+        case .year: return String(localized: "1Y", comment: "Chart range: one year")
+        case .all: return String(localized: "All", comment: "Chart range: all time")
+        }
+    }
+
     var startDate: Date? {
         let calendar = Calendar.current
         switch self {
@@ -36,7 +44,7 @@ struct WeightSection: View {
                 if trend.isWarning, let percent = trend.percentChange, let since = trend.referenceDate {
                     CalloutRow(
                         title: "Weight loss",
-                        text: "Down \(Fmt.percent(abs(percent))) since \(Fmt.date(since)). Worth mentioning to the vet.",
+                        text: weightLossText(percent: percent, since: since),
                         systemImage: "exclamationmark.triangle.fill",
                         tint: .red
                     )
@@ -44,7 +52,7 @@ struct WeightSection: View {
                 if entries.count >= 2 {
                     Picker("Range", selection: $range) {
                         ForEach(WeightRange.allCases) { range in
-                            Text(range.rawValue).tag(range)
+                            Text(range.label).tag(range)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -61,7 +69,7 @@ struct WeightSection: View {
                 NavigationLink {
                     WeightHistoryView(cat: cat)
                 } label: {
-                    LabeledContent("History", value: entries.count == 1 ? "1 weigh-in" : "\(entries.count) weigh-ins")
+                    LabeledContent("History", value: weighInCount(entries.count))
                 }
             } else {
                 Text("No weigh-ins yet.")
@@ -72,6 +80,16 @@ struct WeightSection: View {
             }
             .help("Record a weigh-in")
         }
+    }
+
+    private func weightLossText(percent: Double, since: Date) -> String {
+        let drop = Fmt.percent(abs(percent))
+        let sinceText = Fmt.date(since)
+        return String(localized: "Down \(drop) since \(sinceText). Worth mentioning to the vet.")
+    }
+
+    private func weighInCount(_ count: Int) -> String {
+        String(localized: "\(count) weigh-ins")
     }
 
     private func summary(_ trend: WeightTrend) -> some View {

@@ -165,7 +165,7 @@ enum BackupExporter {
 
     static var defaultFilename: String {
         let day = Date.now.formatted(.iso8601.year().month().day())
-        return "Pet-o-Base Backup \(day)"
+        return String(localized: "Pet-o-Base Backup \(day)", comment: "Backup file name; the argument is a date")
     }
 
     static func dto(_ cat: Cat) -> CatDTO {
@@ -250,6 +250,15 @@ enum BackupSource: String {
     case app = "Pet-o-Base app backup"
     case webZip = "Pet-o-Base web full backup"
     case webJSON = "Pet-o-Base web data export (no photos)"
+
+    var label: String {
+        switch self {
+        case .catShare: return String(localized: "Shared pet")
+        case .app: return String(localized: "Pet-o-Base app backup")
+        case .webZip: return String(localized: "Pet-o-Base web full backup")
+        case .webJSON: return String(localized: "Pet-o-Base web data export (no photos)")
+        }
+    }
 }
 
 enum BackupError: LocalizedError {
@@ -259,10 +268,10 @@ enum BackupError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unreadable: return "The file couldn't be read."
-        case .unknownFormat: return "This isn't a Pet-o-Base backup."
+        case .unreadable: return String(localized: "The file couldn't be read.")
+        case .unknownFormat: return String(localized: "This isn't a Pet-o-Base backup.")
         case .newerVersion(let version):
-            return "This backup was made by a newer version of Pet-o-Base (format \(version)). Update the app first."
+            return String(localized: "This backup was made by a newer version of Pet-o-Base (format \(version)). Update the app first.")
         }
     }
 }
@@ -305,9 +314,14 @@ struct ImportSummary {
     var contacts = 0
 
     var text: String {
-        func plural(_ count: Int, _ word: String) -> String { "\(count) \(word)\(count == 1 ? "" : "s")" }
-        return [plural(cats, "pet"), plural(photos, "photo"), plural(documents, "document"),
-                plural(contacts, "contact")].joined(separator: ", ")
+        [String(localized: "\(cats) pets"), String(localized: "\(photos) photos"),
+         String(localized: "\(documents) documents"), String(localized: "\(contacts) contacts")]
+            .joined(separator: ", ")
+    }
+
+    /// "3 pets, 2 contacts"
+    static func petsAndContacts(_ cats: Int, _ contacts: Int) -> String {
+        String(localized: "\(cats) pets") + ", " + String(localized: "\(contacts) contacts")
     }
 }
 
@@ -322,7 +336,7 @@ enum BackupImporter {
         log.info("Import started: \(file.cats.count) cats, \(file.contacts.count) contacts, replace=\(replace)")
         let started = Date()
         if replace {
-            progress("Removing current data…")
+            progress(String(localized: "Removing current data…"))
             await Task.yield()
             // Deleted one by one so cascade rules run; then sweep up any orphans.
             try deleteAll(Cat.self, in: context)
@@ -341,19 +355,24 @@ enum BackupImporter {
         var summary = ImportSummary()
         for (catIndex, dto) in file.cats.enumerated() {
             try Task.checkCancellation()
-            let catLabel = "\(dto.name.isEmpty ? "Pet" : dto.name) (\(catIndex + 1) of \(file.cats.count))"
-            progress("Importing \(catLabel)…")
+            let petName = dto.name.isEmpty ? String(localized: "Pet") : dto.name
+            let catNumber = catIndex + 1
+            let catTotal = file.cats.count
+            let catLabel = String(localized: "\(petName) (\(catNumber) of \(catTotal))", comment: "Import progress: pet name, its number, total")
+            progress(String(localized: "Importing \(catLabel)…"))
             log.info("Cat \(catLabel, privacy: .public): \(dto.photos.count) photos, \(dto.documents.count) documents")
             await Task.yield()
             let (_, photoCount, documentCount) = try await insertCat(dto, into: context) { index in
                 try Task.checkCancellation()
-                progress("\(catLabel)\nPhoto \(index + 1) of \(dto.photos.count)")
+                let photoNumber = index + 1
+                let photoTotal = dto.photos.count
+                progress(catLabel + "\n" + String(localized: "Photo \(photoNumber) of \(photoTotal)"))
                 await Task.yield()
             }
             summary.photos += photoCount
             summary.documents += documentCount
             summary.cats += 1
-            progress("\(catLabel)\nSaving…")
+            progress(catLabel + "\n" + String(localized: "Saving…"))
             await Task.yield()
             try context.save()
             log.info("Cat \(catLabel, privacy: .public) saved")

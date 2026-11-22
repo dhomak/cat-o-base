@@ -26,6 +26,11 @@ struct CatEditView: View {
         newPhotoPreview ?? cat?.profilePhoto?.thumbnailImage
     }
 
+    private var title: LocalizedStringKey {
+        if cat != nil { return "Edit Pet" }
+        return draft.isGuest ? "New Guest Pet" : "New Pet"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -123,7 +128,7 @@ struct CatEditView: View {
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle(cat == nil ? (draft.isGuest ? "New Guest Pet" : "New Pet") : "Edit Pet")
+            .navigationTitle(title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -183,7 +188,11 @@ struct CatEditView: View {
                 }
                 .onDelete { draft.guestContacts.remove(atOffsets: $0) }
                 Button {
-                    let role = draft.guestContacts.contains { $0.role.lowercased() == "owner" } ? "Vet" : "Owner"
+                    let owner = String(localized: "Owner")
+                    let hasOwner = draft.guestContacts.contains {
+                        $0.role.lowercased() == "owner" || $0.role.lowercased() == owner.lowercased()
+                    }
+                    let role = hasOwner ? String(localized: "Vet") : owner
                     draft.guestContacts.append(GuestContactDraft(role: role))
                 } label: {
                     Label("Add Contact", systemImage: "plus")
@@ -273,7 +282,7 @@ struct CatDraft {
         guard let cat else {
             if startAsGuest {
                 isGuest = true
-                guestContacts = [GuestContactDraft(role: "Owner")]
+                guestContacts = [GuestContactDraft(role: String(localized: "Owner"))]
             }
             return
         }

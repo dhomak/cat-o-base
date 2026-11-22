@@ -45,7 +45,9 @@ struct VaccinationRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(vaccination.name).font(.body.weight(.medium))
-                Text("Given \(Fmt.date(vaccination.dateGiven))" + (vaccination.vet.isEmpty ? "" : " · \(vaccination.vet)"))
+                Text(vaccination.vet.isEmpty
+                     ? "Given \(Fmt.date(vaccination.dateGiven))"
+                     : "Given \(Fmt.date(vaccination.dateGiven)) · \(vaccination.vet)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -109,12 +111,22 @@ struct TreatmentRow: View {
     }
 
     private var statusLine: String {
-        if !treatment.active { return "Stopped" }
+        if !treatment.active { return String(localized: "Stopped") }
         var parts: [String] = []
-        if let last = treatment.lastGiven { parts.append("Last \(Fmt.date(last))") }
-        if let due = treatment.nextDue { parts.append("next \(Fmt.date(due)) (\(Fmt.relativeDue(due)))") }
-        if let end = treatment.endDate { parts.append("until \(Fmt.date(end))") }
-        return parts.isEmpty ? "No dates set" : parts.joined(separator: " · ")
+        if let last = treatment.lastGiven {
+            let lastText = Fmt.date(last)
+            parts.append(String(localized: "Last \(lastText)", comment: "Last dose date"))
+        }
+        if let due = treatment.nextDue {
+            let dueText = Fmt.date(due)
+            let relative = Fmt.relativeDue(due)
+            parts.append(String(localized: "next \(dueText) (\(relative))", comment: "Next dose date, then e.g. 'in 6 days'"))
+        }
+        if let end = treatment.endDate {
+            let endText = Fmt.date(end)
+            parts.append(String(localized: "until \(endText)", comment: "End of a course"))
+        }
+        return parts.isEmpty ? String(localized: "No dates set") : parts.joined(separator: " · ")
     }
 
     private var statusColor: Color {

@@ -334,7 +334,16 @@ struct ZipArchive {
         let localHeaderOffset: Int
     }
 
-    enum ZipError: Error { case notAZip, unsupported }
+    enum ZipError: LocalizedError {
+        case notAZip, unsupported
+
+        var errorDescription: String? {
+            switch self {
+            case .notAZip: return String(localized: "This file isn't a valid zip archive.")
+            case .unsupported: return String(localized: "This zip file uses a format Pet-o-Base can't read.")
+            }
+        }
+    }
 
     private let data: Data
     let entries: [String: Entry]

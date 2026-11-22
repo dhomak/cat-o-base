@@ -48,7 +48,7 @@ struct CatOBaseCommands: Commands {
         }
 
         CommandMenu("Pet") {
-            Button(cat.map { "Edit \($0.name)" } ?? "Edit Pet") { cat?.edit() }
+            Button(cat.map { String(localized: "Edit \($0.name)") } ?? String(localized: "Edit Pet")) { cat?.edit() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(cat == nil)
             Divider()

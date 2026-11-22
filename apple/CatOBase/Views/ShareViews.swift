@@ -43,7 +43,7 @@ struct CatShareView: View {
                 Section("Include") {
                     Picker("Photos", selection: $options.photos) {
                         ForEach(ShareOptions.Photos.allCases) { choice in
-                            Text(choice == .all ? "All photos (\(photoCount))" : choice.label).tag(choice)
+                            Text(choice == .all ? String(localized: "All photos (\(photoCount))") : choice.label).tag(choice)
                         }
                     }
                     Toggle("Breed, markings, microchip", isOn: $options.details)
@@ -128,7 +128,7 @@ struct CatShareView: View {
         #endif
     }
 
-    private func shareRow(_ title: String, detail: String, systemImage: String) -> some View {
+    private func shareRow(_ title: LocalizedStringKey, detail: LocalizedStringKey, systemImage: String) -> some View {
         Label {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
@@ -169,17 +169,18 @@ struct GuestReceiveView: View {
 
     private var included: [String] {
         var items: [String] = []
-        func add(_ count: Int, _ word: String) {
-            if count > 0 { items.append("\(count) \(word)\(count == 1 ? "" : "s")") }
-        }
-        add(cat.photos.count, "photo")
-        add(cat.vaccinations.count, "vaccination")
-        add(cat.treatments.count, "treatment")
-        add(cat.weights.count, "weigh-in")
-        add(cat.visits.count, "vet visit")
-        add(cat.documents.count, "document")
-        add(cat.journal.count, "journal entry")
-        add(share.file.contacts.count, "contact")
+        let photos = cat.photos.count, vaccinations = cat.vaccinations.count
+        let treatments = cat.treatments.count, weighIns = cat.weights.count
+        let visits = cat.visits.count, documents = cat.documents.count
+        let entries = cat.journal.count, contacts = share.file.contacts.count
+        if photos > 0 { items.append(String(localized: "\(photos) photos")) }
+        if vaccinations > 0 { items.append(String(localized: "\(vaccinations) vaccinations")) }
+        if treatments > 0 { items.append(String(localized: "\(treatments) treatments")) }
+        if weighIns > 0 { items.append(String(localized: "\(weighIns) weigh-ins")) }
+        if visits > 0 { items.append(String(localized: "\(visits) vet visits")) }
+        if documents > 0 { items.append(String(localized: "\(documents) documents")) }
+        if entries > 0 { items.append(String(localized: "\(entries) journal entries")) }
+        if contacts > 0 { items.append(String(localized: "\(contacts) contacts")) }
         return items
     }
 
@@ -190,7 +191,7 @@ struct GuestReceiveView: View {
                     VStack(spacing: 10) {
                         AvatarCircle(image: avatar, size: 110,
                                      species: Species(rawValue: cat.species ?? "cat") ?? .other)
-                        Text(cat.name.isEmpty ? "Unnamed pet" : cat.name)
+                        Text(cat.name.isEmpty ? String(localized: "Unnamed pet") : cat.name)
                             .font(.title.bold())
                         Text(sender.isEmpty ? "Shared with you" : "Shared by \(sender)")
                             .foregroundStyle(.secondary)
@@ -213,7 +214,9 @@ struct GuestReceiveView: View {
 
                 if let existing {
                     Section {
-                        Text("You already have \(existing.displayName) from \(existing.guestFrom.isEmpty ? "this person" : existing.guestFrom), received \(Fmt.date(existing.guestReceivedAt)). Updating replaces that copy, including any changes you made to it.")
+                        Text(existing.guestFrom.isEmpty
+                             ? "You already have \(existing.displayName), received \(Fmt.date(existing.guestReceivedAt)). Updating replaces that copy, including any changes you made to it."
+                             : "You already have \(existing.displayName) from \(existing.guestFrom), received \(Fmt.date(existing.guestReceivedAt)). Updating replaces that copy, including any changes you made to it.")
                             .font(.callout)
                         Button {
                             add(replacing: existing)

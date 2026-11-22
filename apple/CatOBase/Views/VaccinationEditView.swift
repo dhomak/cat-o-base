@@ -18,12 +18,12 @@ enum VaccineRepeat: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .none: return "Doesn't repeat"
-        case .oneMonth: return "Booster in 1 month"
-        case .sixMonths: return "Every 6 months"
-        case .oneYear: return "Every year"
-        case .threeYears: return "Every 3 years"
-        case .custom: return "Pick a date"
+        case .none: return String(localized: "Doesn't repeat")
+        case .oneMonth: return String(localized: "Booster in 1 month")
+        case .sixMonths: return String(localized: "Every 6 months")
+        case .oneYear: return String(localized: "Every year")
+        case .threeYears: return String(localized: "Every 3 years")
+        case .custom: return String(localized: "Pick a date")
         }
     }
 
@@ -85,7 +85,7 @@ struct VaccinationEditView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Vaccine", text: $name, prompt: Text(cat.species.vaccineSuggestions.first.map { "e.g. \($0)" } ?? "Vaccine name"))
+                    TextField("Vaccine", text: $name, prompt: Text(cat.species.vaccineSuggestions.first.map { String(localized: "e.g. \($0)") } ?? String(localized: "Vaccine name")))
                     if !cat.species.vaccineSuggestions.isEmpty {
                         SuggestionChips(suggestions: cat.species.vaccineSuggestions) { name = $0 }
                     }

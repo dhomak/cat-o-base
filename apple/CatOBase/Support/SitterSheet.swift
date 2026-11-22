@@ -11,7 +11,8 @@ enum SitterSheetPDF {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("sitter-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let title = cats.count == 1 ? "\(cats[0].displayName) care sheet" : "Pet care sheet"
+        let title = cats.count == 1 ? String(localized: "\(cats[0].displayName) care sheet")
+                                     : String(localized: "Pet care sheet")
         let url = folder.appendingPathComponent("\(title).pdf")
 
         var mediaBox = CGRect(origin: .zero, size: pageSize)
@@ -71,8 +72,8 @@ struct SitterPage: View {
 
     private var facts: String {
         var parts: [String] = [cat.species.label]
-        if let age = Fmt.age(from: cat.birthday) { parts.append(cat.birthdayApprox ? "about \(age)" : age) }
-        if cat.sex != .unknown { parts.append(cat.sex.label.lowercased() + (cat.neutered ? ", neutered" : "")) }
+        if let age = Fmt.age(from: cat.birthday) { parts.append(cat.birthdayApprox ? String(localized: "about \(age)", comment: "Approximate age") : age) }
+        if cat.sex != .unknown { parts.append(cat.sex.label.lowercased() + (cat.neutered ? ", " + String(localized: "neutered") : "")) }
         if !cat.markings.isEmpty { parts.append(cat.markings) }
         if let weight = cat.latestWeight { parts.append(Fmt.kg(weight.kg)) }
         return parts.joined(separator: " · ")
@@ -140,7 +141,7 @@ struct SitterPage: View {
                     label("Contacts")
                     ForEach(Array(contacts.enumerated()), id: \.offset) { _, contact in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(contact.role.isEmpty ? "Contact" : contact.role)
+                            Text(contact.role.isEmpty ? String(localized: "Contact") : contact.role)
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(muted)
                                 .frame(width: 110, alignment: .leading)
@@ -171,14 +172,15 @@ struct SitterPage: View {
         return text
     }
 
-    private func label(_ text: String) -> some View {
-        Text(text.uppercased())
+    private func label(_ text: LocalizedStringKey) -> some View {
+        Text(text)
+            .textCase(.uppercase)
             .font(.system(size: 10, weight: .bold))
             .tracking(0.8)
             .foregroundStyle(muted)
     }
 
-    private func field(_ title: String, _ value: String) -> some View {
+    private func field(_ title: LocalizedStringKey, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             label(title)
             Text(value).font(.system(size: 13)).fixedSize(horizontal: false, vertical: true)

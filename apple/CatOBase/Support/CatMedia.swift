@@ -36,7 +36,7 @@ enum CatMedia {
                 // Not decodable as an image: keep it as a document instead.
             }
             let title = (item.filename as NSString).deletingPathExtension
-            let document = CatDocument(title: title.isEmpty ? "Document" : title, filename: item.filename,
+            let document = CatDocument(title: title.isEmpty ? String(localized: "Document") : title, filename: item.filename,
                                        typeIdentifier: item.type.identifier, data: item.data)
             context.insert(document)
             document.cat = cat
@@ -77,7 +77,7 @@ enum CatMedia {
             }
         }
         for type in [UTType.pdf, UTType.image] where provider.hasItemConformingToTypeIdentifier(type.identifier) {
-            let suggested = provider.suggestedName ?? (type == .pdf ? "Document" : "Photo")
+            let suggested = provider.suggestedName ?? (type == .pdf ? String(localized: "Document") : String(localized: "Photo"))
             return await withCheckedContinuation { continuation in
                 _ = provider.loadDataRepresentation(forTypeIdentifier: type.identifier) { data, _ in
                     guard let data else { return continuation.resume(returning: nil) }
@@ -102,7 +102,7 @@ struct ContinuityImport: Transferable {
 
     var incoming: CatMedia.Incoming {
         let day = Date.now.formatted(.iso8601.year().month().day())
-        let name = type == .pdf ? "Scan \(day).pdf" : "Photo \(day).jpg"
+        let name = type == .pdf ? String(localized: "Scan \(day)") + ".pdf" : String(localized: "Photo \(day)") + ".jpg"
         return CatMedia.Incoming(data: data, filename: name, type: type)
     }
 }

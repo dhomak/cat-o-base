@@ -375,7 +375,7 @@ struct CatDetailView: View {
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
                 if let age = Fmt.age(from: cat.birthday) {
-                    Text(cat.birthdayApprox ? "\(age) (approx.)" : age)
+                    Text(cat.birthdayApprox ? String(localized: "\(age) (approx.)") : age)
                         .foregroundStyle(.secondary)
                 }
                 if cat.archived { Pill("Archived") }
@@ -396,7 +396,7 @@ struct CatDetailView: View {
 
     private var sexText: String {
         let base = cat.sex == .unknown ? "—" : cat.sex.label
-        return cat.neutered ? "\(base), neutered" : base
+        return cat.neutered ? base + ", " + String(localized: "neutered") : base
     }
 
     private var bornText: String {

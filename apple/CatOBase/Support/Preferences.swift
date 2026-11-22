@@ -22,9 +22,9 @@ enum CatSort: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .name: return "Name"
-        case .oldestFirst: return "Age, oldest first"
-        case .youngestFirst: return "Age, youngest first"
+        case .name: return String(localized: "Name")
+        case .oldestFirst: return String(localized: "Age, oldest first")
+        case .youngestFirst: return String(localized: "Age, youngest first")
         }
     }
 
@@ -62,8 +62,16 @@ enum WeightUnit: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .kg: return "Kilograms (kg)"
-        case .lb: return "Pounds (lb)"
+        case .kg: return String(localized: "Kilograms (kg)")
+        case .lb: return String(localized: "Pounds (lb)")
+        }
+    }
+
+    /// "kg" or "lb", translated ("кг").
+    var symbol: String {
+        switch self {
+        case .kg: return String(localized: "kg", comment: "Kilograms, after a number")
+        case .lb: return String(localized: "lb", comment: "Pounds, after a number")
         }
     }
 
@@ -78,16 +86,16 @@ enum WeightUnit: String, CaseIterable, Identifiable {
     /// "4.2 kg", "9.26 lb"
     func format(kilograms kg: Double) -> String {
         let value = fromKilograms(kg)
-        return value.formatted(.number.precision(.fractionLength(0...2))) + " " + rawValue
+        return value.formatted(.number.precision(.fractionLength(0...2))) + " " + symbol
     }
 
     /// "+0.2 kg", "−0.15 lb"
     func formatChange(kilograms kg: Double) -> String {
         let value = fromKilograms(kg)
         let magnitude = abs(value).formatted(.number.precision(.fractionLength(0...2)))
-        if value > 0 { return "+\(magnitude) \(rawValue)" }
-        if value < 0 { return "−\(magnitude) \(rawValue)" }
-        return "no change"
+        if value > 0 { return "+\(magnitude) \(symbol)" }
+        if value < 0 { return "−\(magnitude) \(symbol)" }
+        return String(localized: "no change")
     }
 
     /// Parses user input, accepting either "," or "." as the decimal separator.

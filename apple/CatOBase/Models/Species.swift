@@ -7,12 +7,12 @@ enum Species: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .cat: return "Cat"
-        case .dog: return "Dog"
-        case .rabbit: return "Rabbit"
-        case .bird: return "Bird"
-        case .rat: return "Rat"
-        case .other: return "Other"
+        case .cat: return String(localized: "Cat", comment: "Species")
+        case .dog: return String(localized: "Dog", comment: "Species")
+        case .rabbit: return String(localized: "Rabbit", comment: "Species")
+        case .bird: return String(localized: "Bird", comment: "Species")
+        case .rat: return String(localized: "Rat", comment: "Species")
+        case .other: return String(localized: "Other species", defaultValue: "Other", comment: "Species")
         }
     }
 
@@ -46,24 +46,25 @@ enum Species: String, CaseIterable, Identifiable {
 
     var breedHint: String {
         switch self {
-        case .cat: return "e.g. domestic shorthair"
-        case .dog: return "e.g. beagle"
-        case .rabbit: return "e.g. Holland Lop"
-        case .bird: return "e.g. budgie"
-        case .rat: return "e.g. fancy rat"
-        case .other: return "Breed or kind"
+        case .cat: return String(localized: "e.g. domestic shorthair")
+        case .dog: return String(localized: "e.g. beagle")
+        case .rabbit: return String(localized: "e.g. Holland Lop")
+        case .bird: return String(localized: "e.g. budgie")
+        case .rat: return String(localized: "e.g. fancy rat")
+        case .other: return String(localized: "Breed or kind")
         }
     }
 
     /// Quick-fill vaccine names for the vaccination form; any name can be typed.
     var vaccineSuggestions: [String] {
         switch self {
-        case .cat: return ["Rabies", "FVRCP (tricat)", "FeLV", "Chlamydia", "FIP"]
-        case .dog: return ["Rabies", "DHPP", "Leptospirosis", "Bordetella", "Lyme"]
-        case .rabbit: return ["RHDV1", "RHDV2", "Myxomatosis"]
-        case .bird: return ["Polyomavirus"]
+        case .cat: return [String(localized: "Rabies"), "FVRCP (tricat)", "FeLV", String(localized: "Chlamydia"), "FIP"]
+        case .dog: return [String(localized: "Rabies"), "DHPP", String(localized: "Leptospirosis"),
+                           String(localized: "Bordetella"), String(localized: "Lyme")]
+        case .rabbit: return ["RHDV1", "RHDV2", String(localized: "Myxomatosis")]
+        case .bird: return [String(localized: "Polyomavirus")]
         case .rat: return []
-        case .other: return ["Rabies"]
+        case .other: return [String(localized: "Rabies")]
         }
     }
 

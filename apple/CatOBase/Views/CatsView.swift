@@ -161,7 +161,7 @@ struct CatsView: View {
         }
     }
 
-    private func sectionHeader(_ title: String) -> some View {
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(.title3.bold())
             .padding(.horizontal, 4)
@@ -197,7 +197,7 @@ struct CatCard: View {
     /// "Rabies: 5 days overdue · Bravecto: in 6 days"
     private var tooltip: String {
         let urgent = cat.dueItems.filter { $0.status != .later }.prefix(3)
-        guard !urgent.isEmpty else { return "Open \(cat.displayName)" }
+        guard !urgent.isEmpty else { return String(localized: "Open \(cat.displayName)") }
         return urgent.map { "\($0.title): \(Fmt.relativeDue($0.date))" }.joined(separator: " · ")
     }
 

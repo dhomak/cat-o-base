@@ -37,7 +37,7 @@ struct DueView: View {
     }
 
     @ViewBuilder
-    private func section(_ title: String, _ items: [DueItem]) -> some View {
+    private func section(_ title: LocalizedStringKey, _ items: [DueItem]) -> some View {
         if !items.isEmpty {
             Section(title: title) {
                 ForEach(items) { item in

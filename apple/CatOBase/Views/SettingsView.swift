@@ -85,8 +85,8 @@ struct SettingsView: View {
             .fileExporter(isPresented: $exporting, document: exportDocument, contentType: .json,
                           defaultFilename: BackupExporter.defaultFilename) { result in
                 switch result {
-                case .success: resultMessage = "Backup saved."
-                case .failure(let error): resultMessage = "Couldn't save the backup: \(error.localizedDescription)"
+                case .success: resultMessage = String(localized: "Backup saved.")
+                case .failure(let error): resultMessage = String(localized: "Couldn't save the backup: \(error.localizedDescription)")
                 }
                 exportDocument = nil
             }
@@ -102,7 +102,7 @@ struct SettingsView: View {
                 Button("Replace All My Data", role: .destructive) { performImport(pending, replace: true) }
                 Button("Cancel", role: .cancel) { pendingImport = nil }
             } message: { pending in
-                Text("\(pending.source.rawValue): \(pending.file.cats.count) pets, \(pending.file.contacts.count) contacts. Adding keeps everything you have, so importing the same backup twice makes duplicates. Replacing deletes your current data first.")
+                Text("\(pending.source.label): \(ImportSummary.petsAndContacts(pending.file.cats.count, pending.file.contacts.count)). Adding keeps everything you have, so importing the same backup twice makes duplicates. Replacing deletes your current data first.")
             }
             .alert("Backup", isPresented: Binding(
                 get: { resultMessage != nil },
@@ -218,7 +218,7 @@ extension SettingsView {
             LabeledContent("Pets", value: "\(cats.count)")
             LabeledContent("Photos", value: "\(photos.count)")
             LabeledContent("Contacts", value: "\(contacts.count)")
-            LabeledContent("Stored", value: "On this device")
+            LabeledContent("Stored", value: String(localized: "On this device"))
         }
         Section("Coming soon") {
             Label("iCloud sync", systemImage: "icloud")
@@ -230,7 +230,7 @@ extension SettingsView {
     }
 
     private func exportBackup() {
-        busyMessage = "Preparing backup…"
+        busyMessage = String(localized: "Preparing backup…")
         Task {
             let cats = (try? context.fetch(FetchDescriptor<Cat>(sortBy: [SortDescriptor(\.name)]))) ?? []
             let contacts = (try? context.fetch(FetchDescriptor<Contact>())) ?? []
@@ -243,13 +243,13 @@ extension SettingsView {
                 exportDocument = BackupDocument(data: data)
                 exporting = true
             } else {
-                resultMessage = "Couldn't create the backup."
+                resultMessage = String(localized: "Couldn't create the backup.")
             }
         }
     }
 
     private func readBackup(_ url: URL) {
-        busyMessage = "Reading backup…"
+        busyMessage = String(localized: "Reading backup…")
         Task {
             let outcome = await Task.detached(priority: .userInitiated) {
                 Result { try BackupReader.read(url) }
@@ -270,19 +270,19 @@ extension SettingsView {
     }
 
     private func performImport(_ pending: PendingImport, replace: Bool) {
-        busyMessage = "Starting import…"
+        busyMessage = String(localized: "Starting import…")
         importTask = Task {
             do {
                 let summary = try await BackupImporter.run(pending.file, into: context, replace: replace) { message in
                     busyMessage = message
                 }
-                resultMessage = "Imported \(summary.text)."
+                resultMessage = String(localized: "Imported \(summary.text).")
             } catch is CancellationError {
                 try? context.save()
-                resultMessage = "Import cancelled. Pets that finished importing were kept."
+                resultMessage = String(localized: "Import cancelled. Pets that finished importing were kept.")
             } catch {
                 BackupImporter.log.error("Import failed: \(error.localizedDescription, privacy: .public)")
-                resultMessage = "Import failed: \(error.localizedDescription)"
+                resultMessage = String(localized: "Import failed: \(error.localizedDescription)")
             }
             busyMessage = nil
             pendingImport = nil

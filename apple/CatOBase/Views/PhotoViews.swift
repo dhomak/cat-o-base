@@ -83,8 +83,8 @@ struct PhotosSection: View {
         var parts: [String] = []
         if !photo.caption.isEmpty { parts.append(photo.caption) }
         if let taken = photo.takenOn { parts.append(Fmt.date(taken)) }
-        if isProfile { parts.append("profile photo") }
-        return parts.isEmpty ? "Open photo" : parts.joined(separator: " · ")
+        if isProfile { parts.append(String(localized: "profile photo")) }
+        return parts.isEmpty ? String(localized: "Open photo") : parts.joined(separator: " · ")
     }
 
     private func importPhotos(_ items: [PhotosPickerItem]) {

@@ -21,7 +21,10 @@ struct TreatmentEditView: View {
     @State private var notes: String
     @State private var confirmingDelete = false
 
-    private static let presets: [(String, Int)] = [("Daily", 1), ("Weekly", 7), ("Monthly", 30), ("3 months", 90)]
+    private static var presets: [(String, Int)] {
+        [(String(localized: "Daily"), 1), (String(localized: "Weekly"), 7),
+         (String(localized: "Monthly"), 30), (String(localized: "3 months"), 90)]
+    }
 
     init(cat: Cat, treatment: Treatment?) {
         self.cat = cat
@@ -158,10 +161,10 @@ struct TreatmentEditView: View {
 
 /// Like OptionalDatePicker, but allows future dates.
 struct OptionalFutureDatePicker: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var date: Date?
 
-    init(_ title: String, date: Binding<Date?>) {
+    init(_ title: LocalizedStringKey, date: Binding<Date?>) {
         self.title = title
         self._date = date
     }

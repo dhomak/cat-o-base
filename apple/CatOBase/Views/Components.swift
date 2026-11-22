@@ -36,16 +36,24 @@ struct CatAvatar: View {
 
 /// Small rounded label, e.g. "special needs".
 struct Pill: View {
-    let text: String
+    let text: Text
     var tint: Color = .secondary
 
-    init(_ text: String, tint: Color = .secondary) {
-        self.text = text
+    /// A literal, looked up in the string catalog.
+    init(_ key: LocalizedStringKey, tint: Color = .secondary) {
+        self.text = Text(key)
+        self.tint = tint
+    }
+
+    /// Text that's already translated or comes from the user.
+    @_disfavoredOverload
+    init<S: StringProtocol>(_ content: S, tint: Color = .secondary) {
+        self.text = Text(content)
         self.tint = tint
     }
 
     var body: some View {
-        Text(text)
+        text
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -56,10 +64,10 @@ struct Pill: View {
 
 /// A toggle that reveals a date picker; the date is nil while off.
 struct OptionalDatePicker: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var date: Date?
 
-    init(_ title: String, date: Binding<Date?>) {
+    init(_ title: LocalizedStringKey, date: Binding<Date?>) {
         self.title = title
         self._date = date
     }
@@ -82,7 +90,7 @@ struct OptionalDatePicker: View {
 
 /// A highlighted block of text for special needs and allergies.
 struct CalloutRow: View {
-    let title: String
+    let title: LocalizedStringKey
     let text: String
     let systemImage: String
     var tint: Color = .orange
@@ -135,9 +143,9 @@ extension View {
 
 /// A list section title: large and bold on the Mac, the standard style on iPhone/iPad.
 struct SectionTitle: View {
-    let title: String
+    let title: LocalizedStringKey
 
-    init(_ title: String) {
+    init(_ title: LocalizedStringKey) {
         self.title = title
     }
 
@@ -156,7 +164,7 @@ struct SectionTitle: View {
 
 extension Section where Parent == SectionTitle, Footer == EmptyView, Content: View {
     /// `Section(title: "Details") { … }` uses SectionTitle for the header.
-    init(title: String, @ViewBuilder content: () -> Content) {
+    init(title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
         self.init(content: content, header: { SectionTitle(title) })
     }
 }

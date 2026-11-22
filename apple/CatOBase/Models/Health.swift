@@ -47,8 +47,8 @@ enum DueKind {
 
     var label: String {
         switch self {
-        case .vaccination: return "Vaccination"
-        case .treatment: return "Treatment"
+        case .vaccination: return String(localized: "Vaccination")
+        case .treatment: return String(localized: "Treatment")
         }
     }
 

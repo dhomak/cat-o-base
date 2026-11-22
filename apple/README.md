@@ -75,14 +75,30 @@ xcodegen          # picks up new or renamed files
 Then press ⌘R in Xcode. If Xcode was open, it reloads the project
 automatically.
 
-## Sharing a cat
+## Sharing a pet
 
-On a cat's page, tap **Share**. Choose what to include, then send it with the
+On a pet's page, tap **Share**. Choose what to include, then send it with the
 standard share sheet. The recipient gets a readable summary plus a
-`Name.catobase` file; opening that file in Pet-o-Base (from Messages,
-Telegram, Mail, Files or Finder) adds the cat under **Guest Cats**. Sharing
-the same cat again lets them update their copy. Shares are snapshots: there's
+`Name.petobase` file; opening that file in Pet-o-Base (from Messages,
+Telegram, Mail, Files or Finder) adds the pet under **Guest Pets**. Sharing
+the same pet again lets them update their copy. Shares are snapshots: there's
 no live sync, which would need iCloud.
+
+## Languages
+
+The app is in English, Russian and Ukrainian, and follows the device language.
+To run just Pet-o-Base in another language:
+
+- **iPhone and iPad:** Settings → Apps → Pet-o-Base → Language.
+- **Mac:** System Settings → General → Language & Region → Applications → +.
+
+In Xcode you can preview a language without changing the device: Product →
+Scheme → Edit Scheme → Run → Options → App Language.
+
+All the text lives in `CatOBase/Localizable.xcstrings`; open it in Xcode to
+edit translations. Permission prompts are in `CatOBase/InfoPlist.xcstrings`.
+When the code gets new text, Xcode adds it to the catalog on the next build,
+marked as needing translation; until then it shows in English.
 
 ## Keyboard shortcuts (Mac, and iPad with a keyboard)
 
@@ -99,7 +115,7 @@ no live sync, which would need iCloud.
 | ← → | Previous / next photo in the viewer |
 | ⌘, | Settings (Mac) |
 
-Drag photos or PDFs onto a cat's page to add them. On the Mac, **File → Import
+Drag photos or PDFs onto a pet's page to add them. On the Mac, **File → Import
 from iPhone** takes a photo or scans a document with your phone.
 
 ## App icon
@@ -126,6 +142,8 @@ CatOBase/
   Views/                    screens
   Support/                  image handling, formatting, preview sample data
   Assets.xcassets           app icon, accent colour
+  Localizable.xcstrings     English, Russian and Ukrainian text
+  InfoPlist.xcstrings       translated permission prompts
 ```
 
 ## Roadmap

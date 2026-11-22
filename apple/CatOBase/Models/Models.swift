@@ -84,7 +84,7 @@ final class Cat {
     }
 
     var displayName: String {
-        name.isEmpty ? "Unnamed pet" : name
+        name.isEmpty ? String(localized: "Unnamed pet") : name
     }
 
     var guestContacts: [ContactDTO] {
@@ -98,9 +98,9 @@ enum CatSex: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .unknown: return "Unknown"
-        case .female: return "Female"
-        case .male: return "Male"
+        case .unknown: return String(localized: "Unknown", comment: "Sex")
+        case .female: return String(localized: "Female")
+        case .male: return String(localized: "Male")
         }
     }
 }
@@ -148,11 +148,11 @@ enum TreatmentKind: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .medication: return "Medication"
-        case .fleaTick: return "Flea / tick"
-        case .deworming: return "Deworming"
-        case .supplement: return "Supplement"
-        case .other: return "Other"
+        case .medication: return String(localized: "Medication")
+        case .fleaTick: return String(localized: "Flea / tick")
+        case .deworming: return String(localized: "Deworming")
+        case .supplement: return String(localized: "Supplement")
+        case .other: return String(localized: "Other treatment", defaultValue: "Other", comment: "Treatment type")
         }
     }
 }

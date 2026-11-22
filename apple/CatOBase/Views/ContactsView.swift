@@ -116,7 +116,10 @@ struct ContactEditView: View {
     @State private var address: String
     @State private var notes: String
 
-    private static let roleSuggestions = ["Vet", "Emergency vet", "Insurance", "Backup sitter", "Neighbour", "Owner"]
+    private static var roleSuggestions: [String] {
+        [String(localized: "Vet"), String(localized: "Emergency vet"), String(localized: "Insurance"),
+         String(localized: "Backup sitter"), String(localized: "Neighbour"), String(localized: "Owner")]
+    }
 
     init(contact: Contact?) {
         self.contact = contact

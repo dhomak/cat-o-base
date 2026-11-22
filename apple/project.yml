@@ -29,6 +29,8 @@ targets:
         # YES is the only value macOS accepts; on iOS the import code uses
         # security-scoped access, so reading a file in place works too.
         LSSupportsOpeningDocumentsInPlace: true
+        # Languages the app is translated into (strings live in Localizable.xcstrings).
+        CFBundleLocalizations: [en, ru, uk]
         CFBundleDocumentTypes:
           - CFBundleTypeName: Pet-o-Base Pet
             CFBundleTypeRole: Viewer
@@ -50,6 +52,9 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
+        # Xcode keeps Localizable.xcstrings in sync with the code on each build.
+        SWIFT_EMIT_LOC_STRINGS: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO

@@ -20,9 +20,9 @@ struct ShareOptions: Hashable {
         var id: String { rawValue }
         var label: String {
             switch self {
-            case .none: return "None"
-            case .profile: return "Profile photo"
-            case .all: return "All photos"
+            case .none: return String(localized: "None", comment: "No photos")
+            case .profile: return String(localized: "Profile photo")
+            case .all: return String(localized: "All photos")
             }
         }
     }
@@ -140,24 +140,24 @@ enum CatShareBuilder {
         var lines: [String] = ["\(cat.species.emoji) \(cat.displayName)"]
 
         var facts: [String] = [cat.species.label.lowercased()]
-        if let age = Fmt.age(from: cat.birthday) { facts.append(cat.birthdayApprox ? "about \(age)" : age) }
-        if cat.sex != .unknown { facts.append(cat.sex.label.lowercased() + (cat.neutered ? ", neutered" : "")) }
+        if let age = Fmt.age(from: cat.birthday) { facts.append(cat.birthdayApprox ? String(localized: "about \(age)", comment: "Approximate age") : age) }
+        if cat.sex != .unknown { facts.append(cat.sex.label.lowercased() + (cat.neutered ? ", " + String(localized: "neutered") : "")) }
         if options.details {
             if !cat.breed.isEmpty { facts.append(cat.breed) }
             if !cat.markings.isEmpty { facts.append(cat.markings) }
         }
         if !facts.isEmpty { lines.append(facts.joined(separator: " · ")) }
-        if options.details && !cat.microchip.isEmpty { lines.append("Microchip: \(cat.microchip)") }
+        if options.details && !cat.microchip.isEmpty { lines.append(String(localized: "Microchip: \(cat.microchip)")) }
 
         if options.specialNeeds {
-            if !cat.specialNeeds.isEmpty { lines.append("\n⚠️ Special needs: \(cat.specialNeeds)") }
-            if !cat.allergies.isEmpty { lines.append("Allergies: \(cat.allergies)") }
+            if !cat.specialNeeds.isEmpty { lines.append("\n⚠️ " + String(localized: "Special needs: \(cat.specialNeeds)")) }
+            if !cat.allergies.isEmpty { lines.append(String(localized: "Allergies: \(cat.allergies)")) }
         }
 
         if options.food {
             let food = [cat.foodBrand, cat.foodPortion, cat.foodSchedule].filter { !$0.isEmpty }
             if !food.isEmpty || !cat.foodNotes.isEmpty {
-                lines.append("\n🍽 Food: " + (food.isEmpty ? "" : food.joined(separator: ", ")))
+                lines.append("\n🍽 " + String(localized: "Food:") + (food.isEmpty ? "" : " " + food.joined(separator: ", ")))
                 if !cat.foodNotes.isEmpty { lines.append(cat.foodNotes) }
             }
         }
@@ -165,26 +165,32 @@ enum CatShareBuilder {
         if options.health {
             let meds = (cat.treatments ?? []).filter(\.active)
             if !meds.isEmpty {
-                lines.append("\n💊 Medication & treatments:")
+                lines.append("\n💊 " + String(localized: "Medication & treatments:"))
                 for treatment in meds {
                     var line = "• \(treatment.name)"
                     if !treatment.summary.isEmpty { line += " (\(treatment.summary))" }
-                    if let due = treatment.nextDue { line += ", next \(Fmt.date(due))" }
+                    if let due = treatment.nextDue {
+                        let dueText = Fmt.date(due)
+                        line += ", " + String(localized: "next \(dueText)", comment: "Next dose date")
+                    }
                     lines.append(line)
                 }
             }
             let vaccines = cat.vaccinations ?? []
             let current = vaccines.filter { $0.isCurrent(among: vaccines) && $0.nextDue != nil }
             if !current.isEmpty {
-                lines.append("\n💉 Vaccinations:")
+                lines.append("\n💉 " + String(localized: "Vaccinations:"))
                 for vaccine in current {
-                    lines.append("• \(vaccine.name), next due \(Fmt.date(vaccine.nextDue))")
+                    let dueText = Fmt.date(vaccine.nextDue)
+                    lines.append("• " + String(localized: "\(vaccine.name), next due \(dueText)"))
                 }
             }
         }
 
         if options.weight, let latest = cat.latestWeight {
-            lines.append("\n⚖️ Weight: \(unit.format(kilograms: latest.kg)) (\(Fmt.date(latest.date)))")
+            let weightText = unit.format(kilograms: latest.kg)
+            let weighedOn = Fmt.date(latest.date)
+            lines.append("\n⚖️ " + String(localized: "Weight: \(weightText) (\(weighedOn))"))
         }
 
         if options.notes && !cat.notes.isEmpty {
@@ -194,7 +200,7 @@ enum CatShareBuilder {
         if options.contacts {
             let contacts = cat.isGuest ? cat.guestContacts : ownContacts.map(contactDTO)
             if !contacts.isEmpty {
-                lines.append("\n📞 Contacts:")
+                lines.append("\n📞 " + String(localized: "Contacts:"))
                 for contact in contacts {
                     let role = contact.role.isEmpty ? "" : "\(contact.role): "
                     let phone = contact.phone.isEmpty ? "" : ", \(contact.phone)"
@@ -203,8 +209,9 @@ enum CatShareBuilder {
             }
         }
 
-        let by = sender.trimmed.isEmpty ? "" : " by \(sender.trimmed)"
-        lines.append("\n— Shared from Pet-o-Base\(by)")
+        let senderName = sender.trimmed
+        lines.append("\n— " + (senderName.isEmpty ? String(localized: "Shared from Pet-o-Base")
+                                                  : String(localized: "Shared from Pet-o-Base by \(senderName)")))
         return lines.joined(separator: "\n")
     }
 }
@@ -236,7 +243,7 @@ final class GuestInbox {
             case .success(let read) where read.1 == .catShare && !read.0.cats.isEmpty:
                 pending = ReceivedShare(file: read.0)
             case .success:
-                error = "This is a full backup, not a shared pet. To restore it, use Settings → Backup → Import."
+                error = String(localized: "This is a full backup, not a shared pet. To restore it, use Settings → Backup → Import.")
             case .failure(let failure):
                 error = failure.localizedDescription
             }

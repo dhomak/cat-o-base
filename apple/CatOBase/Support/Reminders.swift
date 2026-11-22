@@ -65,13 +65,15 @@ enum ReminderScheduler {
             }
 
             if onDay > now {
-                plans.append(Plan(fireDate: onDay, title: "\(catName): \(item.title) due today",
+                let itemTitle = item.title
+                plans.append(Plan(fireDate: onDay, title: String(localized: "\(catName): \(itemTitle) due today", comment: "Notification: pet name, vaccine or medication"),
                                   body: detail, thread: catName, catID: catID))
             }
             if settings.dayBefore,
                let dayBefore = calendar.date(byAdding: .day, value: -1, to: onDay),
                dayBefore > now {
-                plans.append(Plan(fireDate: dayBefore, title: "\(catName): \(item.title) due tomorrow",
+                let itemTitle = item.title
+                plans.append(Plan(fireDate: dayBefore, title: String(localized: "\(catName): \(itemTitle) due tomorrow", comment: "Notification: pet name, vaccine or medication"),
                                   body: detail, thread: catName, catID: catID))
             }
         }
@@ -128,7 +130,7 @@ enum ReminderScheduler {
     static func sendTest() async {
         let content = UNMutableNotificationContent()
         content.title = "Pet-o-Base"
-        content.body = "Reminders are working. 🐾"
+        content.body = String(localized: "Reminders are working. 🐾")
         content.sound = .default
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
         let request = UNNotificationRequest(identifier: "catobase.test", content: content, trigger: trigger)
