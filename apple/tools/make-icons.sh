@@ -40,4 +40,11 @@ for pt in 16 32 128 256 512; do
   done
 done
 
+echo "Launch animation icon from $IOS_SRC"
+LAUNCH="$(dirname "$DEST")/LaunchIcon.imageset"
+for scale in 1 2 3; do
+  px=$((120 * scale))
+  sips -s format png -z "$px" "$px" "$IOS_SRC" --out "$LAUNCH/launch-icon@${scale}x.png" >/dev/null
+done
+
 echo "Done. In Xcode: Product → Clean Build Folder (⇧⌘K), then run (⌘R)."

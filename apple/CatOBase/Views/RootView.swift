@@ -66,6 +66,7 @@ struct RootView: View {
             #endif
         }
         .tabViewStyle(.sidebarAdaptable)
+        .launchZoom()
         .focusedSceneValue(\.appActions, AppActions(
             newCat: { newCat = .own },
             newGuestCat: { newCat = .guest }
