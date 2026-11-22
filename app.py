@@ -357,6 +357,16 @@ SPECIES = {
 }
 
 
+def gotcha_label(species, form=False):
+    """Cats have their own word for it in Russian and Ukrainian."""
+    if form:
+        return _("Adoption / cat's gotcha day") if species == "cat" else _("Adoption / gotcha day")
+    return _("Cat's gotcha day") if species == "cat" else _("Gotcha day")
+
+
+app.jinja_env.globals["gotcha_label"] = gotcha_label
+
+
 def species_of(row):
     key = (row["species"] if row is not None and "species" in row.keys() else None) or "cat"
     return key if key in SPECIES else "other"
@@ -748,7 +758,8 @@ def calendar_ics():
             event(f"bday-{c['id']}@cat-o-base", b, _("{name}'s birthday", name=c["name"]), rrule="FREQ=YEARLY")
         a = pdate(c["adoption_date"])
         if a:
-            event(f"gotcha-{c['id']}@cat-o-base", a, _("{name} — gotcha day", name=c["name"]), rrule="FREQ=YEARLY")
+            event(f"gotcha-{c['id']}@cat-o-base", a, (_("{name} — cat's gotcha day", name=c["name"]) if species_of(c) == "cat"
+                                                                     else _("{name} — gotcha day", name=c["name"])), rrule="FREQ=YEARLY")
     L.append("END:VCALENDAR")
     return Response("\r\n".join(L) + "\r\n", mimetype="text/calendar",
                     headers={"Content-Disposition": "inline; filename=pets.ics"})

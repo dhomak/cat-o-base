@@ -64,19 +64,28 @@ struct Pill: View {
 
 /// A toggle that reveals a date picker; the date is nil while off.
 struct OptionalDatePicker: View {
-    let title: LocalizedStringKey
+    let title: Text
     @Binding var date: Date?
 
     init(_ title: LocalizedStringKey, date: Binding<Date?>) {
-        self.title = title
+        self.title = Text(title)
+        self._date = date
+    }
+
+    /// For a title that's already translated.
+    @_disfavoredOverload
+    init<S: StringProtocol>(_ title: S, date: Binding<Date?>) {
+        self.title = Text(title)
         self._date = date
     }
 
     var body: some View {
-        Toggle(title, isOn: Binding(
+        Toggle(isOn: Binding(
             get: { date != nil },
             set: { isOn in date = isOn ? (date ?? Date()) : nil }
-        ))
+        )) {
+            title
+        }
         if date != nil {
             DatePicker(
                 "Date",

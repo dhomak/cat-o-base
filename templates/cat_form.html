@@ -24,7 +24,7 @@
       <label>{{ _("Microchip #") }}<input name="microchip" value="{{ cat.microchip or '' }}" inputmode="numeric"></label>
       <label>{{ _("Birthday") }}<input type="date" name="birthday" value="{{ cat.birthday or '' }}"></label>
       <label class="check"><input type="checkbox" name="birthday_approx" {% if cat.birthday_approx %}checked{% endif %}> {{ _("Birthday is approximate") }}</label>
-      <label>{{ _("Adoption / gotcha day") }}<input type="date" name="adoption_date" value="{{ cat.adoption_date or '' }}"></label>
+      <label><span id="gotcha_label" data-cat="{{ gotcha_label('cat', form=True) }}" data-other="{{ gotcha_label('other', form=True) }}">{{ gotcha_label(species_of(cat) if cat else 'cat', form=True) }}</span><input type="date" name="adoption_date" value="{{ cat.adoption_date or '' }}"></label>
     </div>
     {% if not cid %}<label>{{ _("Profile photo") }}<input type="file" name="photo" accept="image/*"></label>{% endif %}
   </fieldset>
@@ -90,6 +90,8 @@
   document.getElementById('species')?.addEventListener('change', e => {
     const hint = e.target.selectedOptions[0]?.dataset.hint;
     if (hint) document.getElementById('breed').placeholder = hint;
+    const gotcha = document.getElementById('gotcha_label');
+    if (gotcha) gotcha.textContent = e.target.value === 'cat' ? gotcha.dataset.cat : gotcha.dataset.other;
   });
   document.getElementById('is_guest')?.addEventListener('change', e => {
     document.getElementById('guest_fields').hidden = !e.target.checked;

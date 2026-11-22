@@ -2201,6 +2201,28 @@
         }
       }
     },
+    "Cat's gotcha day" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gotcha day"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "День укотовления"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "День укотовлення"
+          }
+        }
+      }
+    },
     "Change Photo" : {
       "localizations" : {
         "ru" : {
@@ -3726,13 +3748,13 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "День укотовления"
+            "value" : "День появления дома"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "День укотовлення"
+            "value" : "День появи вдома"
           }
         }
       }

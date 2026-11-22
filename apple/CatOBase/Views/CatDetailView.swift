@@ -69,7 +69,7 @@ struct CatDetailView: View {
                 }
                 LabeledContent("Sex", value: sexText)
                 LabeledContent("Born", value: bornText)
-                LabeledContent("Gotcha day", value: Fmt.date(cat.adoptionDate))
+                LabeledContent(cat.species.gotchaDayLabel, value: Fmt.date(cat.adoptionDate))
                 LabeledContent("Weight", value: cat.latestWeight.map { unit.format(kilograms: $0.kg) } ?? "—")
                 if !cat.breed.trimmed.isEmpty { LabeledContent("Breed", value: cat.breed) }
                 if !cat.markings.trimmed.isEmpty { LabeledContent("Markings", value: cat.markings) }

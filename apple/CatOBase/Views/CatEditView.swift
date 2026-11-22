@@ -103,7 +103,7 @@ struct CatEditView: View {
                     if draft.birthday != nil {
                         Toggle("Birthday is approximate", isOn: $draft.birthdayApprox)
                     }
-                    OptionalDatePicker("Gotcha day", date: $draft.adoptionDate)
+                    OptionalDatePicker(draft.species.gotchaDayLabel, date: $draft.adoptionDate)
                 }
 
                 Section("Health") {

@@ -55,6 +55,12 @@ enum Species: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Cats have their own word for it in Russian and Ukrainian ("день укотовления").
+    var gotchaDayLabel: String {
+        self == .cat ? String(localized: "Cat's gotcha day", defaultValue: "Gotcha day")
+                     : String(localized: "Gotcha day")
+    }
+
     /// Quick-fill vaccine names for the vaccination form; any name can be typed.
     var vaccineSuggestions: [String] {
         switch self {

@@ -31,7 +31,7 @@ def gettext(message, /, **values):
     from translations import TRANSLATIONS
     lang = current_language()
     message = " ".join(str(message).split())  # template text may span lines
-    translated = TRANSLATIONS.get(lang, {}).get(message, message) if lang != DEFAULT else message
+    translated = TRANSLATIONS.get(lang, {}).get(message, message)  # English has a few overrides too
     return translated.format(**values) if values else translated
 
 

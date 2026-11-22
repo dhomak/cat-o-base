@@ -24,7 +24,7 @@
       <div><dt>{{ _("Breed") }}</dt><dd>{{ c.breed or '—' }}</dd></div>
       <div><dt>{{ _("Markings") }}</dt><dd>{{ c.markings or '—' }}</dd></div>
       <div><dt>{{ _("Microchip") }}</dt><dd class="mono">{{ c.microchip or '—' }}</dd></div>
-      <div><dt>{{ _("Gotcha day") }}</dt><dd>{{ c.adoption_date|d }}</dd></div>
+      <div><dt>{{ gotcha_label(species_of(c)) }}</dt><dd>{{ c.adoption_date|d }}</dd></div>
     </dl>
     <div class="actions">
       <a class="btn" href="{{ url_for('cat_form', cid=c.id) }}">{{ _("Edit") }}</a>
