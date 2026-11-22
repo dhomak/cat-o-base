@@ -624,7 +624,7 @@ def export_json():
     out = {"app": "cat-o-base", "exported": dt.datetime.now().isoformat(timespec="seconds"),
            **{t: [dict(r) for r in q(f"SELECT * FROM {t}")] for t in TABLES}}
     return Response(json.dumps(out, ensure_ascii=False, indent=2), mimetype="application/json",
-                    headers={"Content-Disposition": f"attachment; filename=cat-o-base-{today()}.json"})
+                    headers={"Content-Disposition": f"attachment; filename=pet-o-base-{today()}.json"})
 
 
 @app.route("/backup.zip")
@@ -641,7 +641,7 @@ def backup_zip():
         for n in sorted(os.listdir(MEDIA)):
             z.write(os.path.join(MEDIA, n), "media/" + n, compress_type=zipfile.ZIP_STORED)
     os.remove(snap)
-    resp = send_file(path, as_attachment=True, download_name=f"cat-o-base-backup-{today()}.zip")
+    resp = send_file(path, as_attachment=True, download_name=f"pet-o-base-backup-{today()}.zip")
 
     @after_this_request
     def _cleanup(r):

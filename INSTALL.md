@@ -8,7 +8,7 @@ Contents:
 
 1. [Download the Debian template](#1-download-the-debian-template)
 2. [Create the container](#2-create-the-container)
-3. [Install Pet-o-Base](#3-install-cat-o-base)
+3. [Install Pet-o-Base](#3-install-pet-o-base)
 4. [Open it](#4-open-it)
 5. [Optional: a nice address via a reverse proxy](#5-optional-a-nice-address-via-a-reverse-proxy)
 6. [Updating](#updating)
@@ -32,7 +32,7 @@ Click **Create CT** at the top right and fill in each tab:
 
 | Tab | Setting |
 |---|---|
-| **General** | CT ID: any free number. Hostname: `cat-o-base`. Set a root password. **Paste your SSH public key** in the box (see the tip below). Leave *Unprivileged container* and *Nesting* ticked. |
+| **General** | CT ID: any free number. Hostname: `pet-o-base`. Set a root password. **Paste your SSH public key** in the box (see the tip below). Leave *Unprivileged container* and *Nesting* ticked. |
 | **Template** | Storage `local`, template `debian-13-standard…` |
 | **Disks** | Your container storage (e.g. `local-lvm`), **4 GB** |
 | **CPU** | **1** core |
@@ -62,16 +62,16 @@ Then run:
 
 ```bash
 apt-get update && apt-get install -y git
-git clone https://github.com/dhomak/cat-o-base.git
-cd cat-o-base
+git clone https://github.com/dhomak/pet-o-base.git
+cd pet-o-base
 ./install.sh
 ```
 
 > If the repository is private, `git clone` asks you to log in. The easiest
 > alternative is to download the code as a zip from GitHub (**Code →
 > Download ZIP**), then copy it in from your computer:
-> `scp cat-o-base-main.zip root@<container-ip>:/root/`. In the container, run
-> `apt-get install -y unzip && unzip cat-o-base-main.zip && cd cat-o-base-main && ./install.sh`.
+> `scp pet-o-base-main.zip root@<container-ip>:/root/`. In the container, run
+> `apt-get install -y unzip && unzip pet-o-base-main.zip && cd pet-o-base-main && ./install.sh`.
 
 The installer:
 
@@ -122,7 +122,7 @@ Caddy, Traefik and plain nginx work the same way: proxy to `http://<ip>:8000`.
 In the container:
 
 ```bash
-cd ~/cat-o-base
+cd ~/pet-o-base
 git pull
 ./install.sh
 ```
@@ -181,15 +181,15 @@ pveam available --section system | grep debian-13   # note the exact name
 pveam download local debian-13-standard_<version>_amd64.tar.zst
 
 pct create 124 local:vztmpl/debian-13-standard_<version>_amd64.tar.zst \
-  --hostname cat-o-base --cores 1 --memory 512 --swap 256 \
+  --hostname pet-o-base --cores 1 --memory 512 --swap 256 \
   --rootfs local-lvm:4 \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp \
   --unprivileged 1 --features nesting=1 --onboot 1 \
   --ssh-public-keys ~/.ssh/authorized_keys
 pct start 124
 pct exec 124 -- bash -c "apt-get update && apt-get install -y git && \
-  git clone https://github.com/dhomak/cat-o-base.git /root/cat-o-base && \
-  /root/cat-o-base/install.sh"
+  git clone https://github.com/dhomak/pet-o-base.git /root/pet-o-base && \
+  /root/pet-o-base/install.sh"
 ```
 
 Change the CT ID, storage and bridge to match your setup. For a static IP, use

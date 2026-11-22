@@ -4,13 +4,18 @@ A native SwiftUI app. One app target runs on iOS, iPadOS and macOS 27.
 Data is stored on the device with SwiftData; the model is ready for iCloud
 sync later.
 
-**Status:** phase 7 of 8, plus cat sharing. Share a cat (choosing what to
-include) through Messages, Telegram and the rest; received cats appear under
-Guest Cats. Camera and document scanner. Sitter sheet PDF, backup and import (including
-from the web app), due-date reminders, cats (sortable by name or age), round profile
-photos with a crop editor and automatic cat detection, photo galleries,
-documents, contacts, vaccinations, medications and treatments, the Due tab,
-and weight tracking with a chart. See [the roadmap](#roadmap).
+![Pet-o-Base on the Mac](docs/screenshots/mac-pets.png)
+
+**Status:** phases 1–7 done; phase 8 (iCloud sync) waits on the developer
+account. Pets of any species (cat, dog, rabbit, bird, rat, other) with
+round profile photos, a crop editor and automatic centring for cats and dogs;
+vaccinations, medications and treatments with a Due tab and reminders;
+weight tracking with a chart; vet visits, documents (with a scanner), photo
+galleries and a journal; contacts with call/WhatsApp/Telegram; guest pets you
+look after; sharing a pet (choosing what to include) through Messages,
+Telegram and the rest; sitter sheet PDF; backup and import, including from
+the web app. Mac and iPad: menu bar, shortcuts, drag and drop, multiple
+windows, Continuity Camera. See [the roadmap](#roadmap).
 
 ## First-time setup
 
@@ -22,8 +27,8 @@ The Xcode project file isn't stored in git. It's generated from
 `project.yml` by XcodeGen, which avoids merge conflicts in the project file.
 
 ```bash
-git clone https://github.com/dhomak/cat-o-base.git
-cd cat-o-base/apple
+git clone https://github.com/dhomak/pet-o-base.git
+cd pet-o-base/apple
 brew install xcodegen
 ```
 
@@ -62,7 +67,7 @@ the top of Xcode and press **⌘R**.
 ## After pulling new code
 
 ```bash
-cd cat-o-base/apple
+cd pet-o-base/apple
 git pull
 xcodegen          # picks up new or renamed files
 ```

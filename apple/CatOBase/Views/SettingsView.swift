@@ -225,7 +225,7 @@ extension SettingsView {
         }
         Section {
             LabeledContent("Version", value: version)
-            Link("Pet-o-Base on GitHub", destination: URL(string: "https://github.com/dhomak/cat-o-base")!)
+            Link("Pet-o-Base on GitHub", destination: URL(string: "https://github.com/dhomak/pet-o-base")!)
         }
     }
 

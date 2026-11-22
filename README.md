@@ -43,8 +43,8 @@ Flask + SQLite, no Docker needed. It's built to run in a tiny Proxmox LXC
 On a fresh Debian 12/13 container or VM, as root:
 
 ```bash
-git clone https://github.com/dhomak/cat-o-base.git
-cd cat-o-base
+git clone https://github.com/dhomak/pet-o-base.git
+cd pet-o-base
 ./install.sh
 ```
 

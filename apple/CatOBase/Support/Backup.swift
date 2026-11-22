@@ -291,7 +291,7 @@ enum BackupReader {
             let file = try BackupFile.decoder().decode(BackupFile.self, from: data)
             return (file, file.isCatShare ? .catShare : .app)
         }
-        if probe.app == "cat-o-base" || probe.app == "catdb" {
+        if ["cat-o-base", "pet-o-base", "catdb"].contains(probe.app ?? "") {
             return (try WebImport.backup(fromJSON: data), .webJSON)
         }
         throw BackupError.unknownFormat
