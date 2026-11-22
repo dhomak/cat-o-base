@@ -51,15 +51,22 @@ struct CatsView: View {
                         grid(guestCats)
                     }
                 }
+                // Full width even when empty, or the scroll view shrinks to nothing and
+                // the "No Pets Yet" overlay gets squeezed into a one-letter column.
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay {
                 if visibleCats.isEmpty {
-                    if search.trimmed.isEmpty {
-                        emptyState
-                    } else {
-                        ContentUnavailableView.search(text: search)
+                    Group {
+                        if search.trimmed.isEmpty {
+                            emptyState
+                        } else {
+                            ContentUnavailableView.search(text: search)
+                        }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .searchable(text: $search, prompt: "Name, species, breed, owner, chip")
