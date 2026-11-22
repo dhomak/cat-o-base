@@ -1,18 +1,25 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit ' ~ cat.name if cid else 'New cat' }}{% endblock %}
+{% block title %}{{ 'Edit ' ~ cat.name if cid else 'New pet' }}{% endblock %}
 {% block body %}
+{% set is_guest = cat.is_guest in (1, '1', 'on', True) %}
 <form method="post" enctype="multipart/form-data" class="panel form">
-  <h2>{{ 'Edit ' ~ cat.name if cid else 'New cat' }}</h2>
+  <h2>{{ 'Edit ' ~ cat.name if cid else ('New guest pet' if is_guest else 'New pet') }}</h2>
 
   <fieldset><legend>Basics</legend>
     <div class="grid">
       <label>Name *<input name="name" required value="{{ cat.name or '' }}" autofocus></label>
+      <label>Species
+        <select name="species" id="species">{% set current = species_of(cat) if cat else 'cat' %}
+          {% for key, sp in SPECIES.items() %}
+          <option value="{{ key }}" data-hint="e.g. {{ sp[2] }}" {% if key == current %}selected{% endif %}>{{ sp[1] }} {{ sp[0] }}</option>
+          {% endfor %}
+        </select></label>
       <label>Sex
         <select name="sex">{% for s in ['', 'female', 'male'] %}
           <option value="{{ s }}" {% if (cat.sex or '')==s %}selected{% endif %}>{{ s or '—' }}</option>{% endfor %}
         </select></label>
       <label class="check"><input type="checkbox" name="neutered" {% if cat.neutered %}checked{% endif %}> Neutered / spayed</label>
-      <label>Breed<input name="breed" value="{{ cat.breed or '' }}" placeholder="domestic shorthair"></label>
+      <label>Breed<input name="breed" id="breed" value="{{ cat.breed or '' }}" placeholder="e.g. {{ SPECIES[species_of(cat) if cat else 'cat'][2] }}"></label>
       <label>Colour &amp; markings<input name="markings" value="{{ cat.markings or '' }}" placeholder="black, white socks"></label>
       <label>Microchip #<input name="microchip" value="{{ cat.microchip or '' }}" inputmode="numeric"></label>
       <label>Birthday<input type="date" name="birthday" value="{{ cat.birthday or '' }}"></label>
@@ -20,6 +27,28 @@
       <label>Adoption / gotcha day<input type="date" name="adoption_date" value="{{ cat.adoption_date or '' }}"></label>
     </div>
     {% if not cid %}<label>Profile photo<input type="file" name="photo" accept="image/*"></label>{% endif %}
+  </fieldset>
+
+  <fieldset><legend>Guest</legend>
+    <label class="check"><input type="checkbox" name="is_guest" id="is_guest" {% if is_guest %}checked{% endif %}> Guest pet: one I'm looking after for someone</label>
+    <div id="guest_fields" {% if not is_guest %}hidden{% endif %}>
+      <div class="grid">
+        <label>Owner's name<input name="guest_from" value="{{ cat.guest_from or '' }}" placeholder="e.g. Anna"></label>
+        <label>Staying since<input type="date" name="guest_since" value="{{ cat.guest_since or '' }}"></label>
+      </div>
+      <p class="muted small">Owner's contacts: shown on this pet's page and sitter sheet. Use the country code (+972…) for WhatsApp.</p>
+      <div id="gc_rows">
+        {% set gcs = guest_contacts(cat) if cat else [] %}
+        {% for k in (gcs if gcs else [{'role': 'Owner', 'name': '', 'phone': ''}]) %}
+        <div class="grid gc">
+          <label>Role<input name="gc_role" value="{{ k.role or '' }}" placeholder="Owner, their vet…"></label>
+          <label>Name<input name="gc_name" value="{{ k.name or '' }}"></label>
+          <label>Phone<input name="gc_phone" type="tel" value="{{ k.phone or '' }}" placeholder="+972 3 000 0000"></label>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="btn tiny ghost" id="gc_add">+ contact</button>
+    </div>
   </fieldset>
 
   <fieldset><legend>Health</legend>
@@ -57,4 +86,21 @@
   </form>
 </details>
 {% endif %}
+<script>
+  // Breed hint follows species; guest section shows when the box is ticked.
+  document.getElementById('species')?.addEventListener('change', e => {
+    const hint = e.target.selectedOptions[0]?.dataset.hint;
+    if (hint) document.getElementById('breed').placeholder = hint;
+  });
+  document.getElementById('is_guest')?.addEventListener('change', e => {
+    document.getElementById('guest_fields').hidden = !e.target.checked;
+  });
+  document.getElementById('gc_add')?.addEventListener('click', () => {
+    const rows = document.getElementById('gc_rows');
+    const row = rows.lastElementChild.cloneNode(true);
+    row.querySelectorAll('input').forEach(i => i.value = '');
+    row.querySelector('input[name=gc_role]').value = rows.children.length === 1 ? 'Vet' : '';
+    rows.appendChild(row);
+  });
+</script>
 {% endblock %}

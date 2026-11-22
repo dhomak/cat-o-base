@@ -5,6 +5,7 @@ Flask + SQLite. All data (database + uploaded media) lives in CATOBASE_DATA
 """
 import calendar
 import datetime as dt
+import io
 import json
 import os
 import secrets
@@ -14,7 +15,7 @@ import tempfile
 import uuid
 import zipfile
 
-from flask import (Flask, abort, after_this_request, flash, g, redirect,
+from flask import (Flask, abort, after_this_request, flash, g, make_response, redirect,
                    render_template, request, send_file, send_from_directory,
                    url_for, Response)
 from markupsafe import Markup, escape
@@ -59,7 +60,9 @@ CREATE TABLE IF NOT EXISTS cats(
   adoption_date TEXT, microchip TEXT, special_needs TEXT, allergies TEXT,
   food_brand TEXT, food_portion TEXT, food_schedule TEXT, food_notes TEXT,
   notes TEXT, profile_photo_id INTEGER, archived INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  species TEXT DEFAULT 'cat', is_guest INTEGER DEFAULT 0, guest_from TEXT, guest_since TEXT,
+  guest_contacts TEXT, share_id TEXT);
 CREATE TABLE IF NOT EXISTS photos(
   id INTEGER PRIMARY KEY, cat_id INTEGER NOT NULL REFERENCES cats(id) ON DELETE CASCADE,
   filename TEXT NOT NULL, caption TEXT, taken_on TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
@@ -103,9 +106,25 @@ def _close_db(_exc):
         d.close()
 
 
+# Columns added after the first release: (table, column, definition).
+MIGRATIONS = [
+    ("cats", "species", "TEXT DEFAULT 'cat'"),
+    ("cats", "is_guest", "INTEGER DEFAULT 0"),
+    ("cats", "guest_from", "TEXT"),
+    ("cats", "guest_since", "TEXT"),
+    ("cats", "guest_contacts", "TEXT"),  # JSON list of {role, name, phone, address, notes}
+    ("cats", "share_id", "TEXT"),        # matches the Apple app's shareID
+]
+
+
 def init_db():
     con = sqlite3.connect(DB_PATH)
     con.executescript(SCHEMA)
+    for table, column, definition in MIGRATIONS:
+        existing = {row[1] for row in con.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+    con.commit()
     con.close()
 
 
@@ -290,11 +309,84 @@ def weight_chart(ws):
     return Markup("".join(parts))
 
 
-# -------------------------------------------------------------------- cats
-CAT_FIELDS = ["name", "sex", "breed", "markings", "birthday", "adoption_date", "microchip",
+# ----------------------------------------------------------------- species
+SPECIES = {
+    # key: (label, emoji, breed hint, vaccine suggestions)
+    "cat": ("Cat", "🐈", "domestic shorthair", ["Rabies", "FVRCP (tricat)", "FeLV", "Chlamydia", "FIP"]),
+    "dog": ("Dog", "🐕", "beagle", ["Rabies", "DHPP", "Leptospirosis", "Bordetella", "Lyme"]),
+    "rabbit": ("Rabbit", "🐇", "Holland Lop", ["RHDV1", "RHDV2", "Myxomatosis"]),
+    "bird": ("Bird", "🐦", "budgie", ["Polyomavirus"]),
+    "rat": ("Rat", "🐀", "fancy rat", []),
+    "other": ("Other", "🐾", "breed or kind", ["Rabies"]),
+}
+
+
+def species_of(row):
+    key = (row["species"] if row is not None and "species" in row.keys() else None) or "cat"
+    return key if key in SPECIES else "other"
+
+
+app.jinja_env.globals.update(SPECIES=SPECIES, species_of=species_of)
+
+
+# ------------------------------------------------------------------ phones
+COUNTRY_CODE = os.environ.get("CATOBASE_COUNTRY_CODE", "972")  # for local numbers starting with 0
+
+
+def phone_links(phone):
+    """tel/sms/WhatsApp/Telegram links for a number, or None."""
+    cleaned = "".join(ch for ch in (phone or "") if ch in "+0123456789")
+    if sum(ch.isdigit() for ch in cleaned) < 3:
+        return None
+    if cleaned.startswith("+"):
+        intl = cleaned[1:]
+    elif cleaned.startswith("00"):
+        intl = cleaned[2:]
+    elif cleaned.startswith("0") and COUNTRY_CODE:
+        intl = COUNTRY_CODE + cleaned[1:]
+    else:
+        intl = cleaned
+    return {"tel": f"tel:{cleaned}", "sms": f"sms:{cleaned}",
+            "whatsapp": f"https://wa.me/{intl}", "telegram": f"https://t.me/+{intl}"}
+
+
+app.jinja_env.globals.update(phone_links=phone_links)
+
+
+# -------------------------------------------------------------------- pets
+CAT_FIELDS = ["name", "species", "sex", "breed", "markings", "birthday", "adoption_date", "microchip",
               "special_needs", "allergies", "food_brand", "food_portion", "food_schedule",
-              "food_notes", "notes"]
-CAT_BOOLS = ["neutered", "birthday_approx", "archived"]
+              "food_notes", "notes", "guest_from", "guest_since"]
+CAT_BOOLS = ["neutered", "birthday_approx", "archived", "is_guest"]
+SORTS = {"name": "Name", "oldest": "Age, oldest first", "youngest": "Age, youngest first"}
+
+
+def guest_contacts(row):
+    try:
+        return json.loads(row["guest_contacts"] or "[]")
+    except (ValueError, TypeError, KeyError, IndexError):
+        return []
+
+
+app.jinja_env.globals.update(guest_contacts=guest_contacts)
+
+
+def contacts_from_form():
+    """Owner's contacts typed into the guest section of the pet form."""
+    rows = zip(request.form.getlist("gc_role"), request.form.getlist("gc_name"), request.form.getlist("gc_phone"))
+    out = [{"role": r.strip(), "name": n.strip(), "phone": ph.strip(), "address": "", "notes": ""}
+           for r, n, ph in rows if n.strip() or ph.strip()]
+    return json.dumps(out, ensure_ascii=False) if out else None
+
+
+def sort_cats(cats, sort):
+    by_name = sorted(cats, key=lambda c: (c["name"] or "").lower())
+    if sort not in ("oldest", "youngest"):
+        return by_name
+    with_bday = [c for c in by_name if pdate(c["birthday"])]
+    without = [c for c in by_name if not pdate(c["birthday"])]
+    with_bday.sort(key=lambda c: pdate(c["birthday"]), reverse=(sort == "youngest"))
+    return with_bday + without
 
 
 def form_vals(fields):
@@ -311,6 +403,8 @@ def get_cat(cid):
 @app.route("/")
 def index():
     arch = request.args.get("archived") == "1"
+    sort = request.args.get("sort") or request.cookies.get("sort") or "name"
+    search = (request.args.get("q") or "").strip().lower()
     cats = q("""
       SELECT c.*,
         COALESCE(p.filename,(SELECT filename FROM photos WHERE cat_id=c.id ORDER BY id DESC LIMIT 1)) photo,
@@ -325,8 +419,17 @@ def index():
             alerts.setdefault(d["cat_id"], set()).add(st)
     upcoming = [d for d in due if (pdate(d["due"]) - today()).days <= 60]
     n_arch = q("SELECT count(*) n FROM cats WHERE archived=1", one=True)["n"]
-    return render_template("index.html", cats=cats, due=upcoming, alerts=alerts,
-                           arch=arch, n_arch=n_arch)
+    if search:
+        cats = [c for c in cats if any(search in (v or "").lower() for v in (
+            c["name"], c["breed"], c["markings"], c["guest_from"], c["microchip"],
+            SPECIES[species_of(c)][0]))]
+    cats = sort_cats(cats, sort)
+    resp = make_response(render_template(
+        "index.html", mine=[c for c in cats if not c["is_guest"]], guests=[c for c in cats if c["is_guest"]],
+        due=upcoming, alerts=alerts, arch=arch, n_arch=n_arch, sort=sort, sorts=SORTS, search=search))
+    if request.args.get("sort") in SORTS:
+        resp.set_cookie("sort", request.args["sort"], max_age=3600 * 24 * 365)
+    return resp
 
 
 @app.route("/due")
@@ -341,10 +444,16 @@ def cat_form(cid=None):
     if request.method == "POST":
         v = form_vals(CAT_FIELDS)
         if not v["name"]:
-            flash("A cat needs a name.")
+            flash("A pet needs a name.")
             return render_template("cat_form.html", cat=request.form, cid=cid)
         for b in CAT_BOOLS:
             v[b] = 1 if request.form.get(b) else 0
+        v["species"] = v["species"] if v["species"] in SPECIES else "cat"
+        if v["is_guest"]:
+            v["guest_contacts"] = contacts_from_form()
+            v["guest_since"] = v["guest_since"] or today().isoformat()
+        else:
+            v["guest_from"] = v["guest_since"] = v["guest_contacts"] = None
         if cid:
             x(f"UPDATE cats SET {', '.join(k + '=?' for k in v)} WHERE id=?", (*v.values(), cid))
         else:
@@ -357,6 +466,9 @@ def cat_form(cid=None):
                     pid = x("INSERT INTO photos(cat_id, filename) VALUES(?,?)", (cid, name))
                     x("UPDATE cats SET profile_photo_id=? WHERE id=?", (pid, cid))
         return redirect(url_for("cat", cid=cid))
+    if cat is None and request.args.get("guest") == "1":
+        cat = {"is_guest": 1, "guest_since": today().isoformat(), "species": "cat",
+               "guest_contacts": json.dumps([{"role": "Owner", "name": "", "phone": ""}])}
     return render_template("cat_form.html", cat=cat, cid=cid)
 
 
@@ -381,13 +493,9 @@ def cat(cid):
 def cat_delete(cid):
     c = get_cat(cid)
     if request.form.get("confirm", "").strip() != c["name"]:
-        flash("Type the cat's name exactly to delete the whole record.")
+        flash("Type the pet's name exactly to delete the whole record.")
         return redirect(url_for("cat_form", cid=cid))
-    for p in q("SELECT filename FROM photos WHERE cat_id=?", (cid,)):
-        rm_media(p["filename"])
-    for d in q("SELECT filename FROM documents WHERE cat_id=?", (cid,)):
-        rm_media(d["filename"])
-    x("DELETE FROM cats WHERE id=?", (cid,))
+    _delete_pet(cid)
     flash(f"{c['name']} deleted.")
     return redirect(url_for("index"))
 
@@ -564,8 +672,10 @@ def sitter():
         if t["end_date"] and pdate(t["end_date"]) and pdate(t["end_date"]) < today():
             continue
         meds.setdefault(t["cat_id"], []).append(t)
-    return render_template("sitter.html", cats=cats, meds=meds,
-                           contacts=q("SELECT * FROM contacts ORDER BY role, name"),
+    # Your contacts head the sheet unless every pet on it is a guest (their owner's
+    # contacts are listed with each guest pet).
+    own = q("SELECT * FROM contacts ORDER BY role, name") if any(not c["is_guest"] for c in cats) else []
+    return render_template("sitter.html", cats=cats, meds=meds, contacts=own,
                            generated=today().isoformat())
 
 
@@ -605,7 +715,7 @@ def calendar_ics():
             event(f"gotcha-{c['id']}@cat-o-base", a, f"{c['name']} — gotcha day", rrule="FREQ=YEARLY")
     L.append("END:VCALENDAR")
     return Response("\r\n".join(L) + "\r\n", mimetype="text/calendar",
-                    headers={"Content-Disposition": "inline; filename=cats.ics"})
+                    headers={"Content-Disposition": "inline; filename=pets.ics"})
 
 
 # ------------------------------------------------------------------ backup
@@ -694,6 +804,363 @@ def restore():
     init_db()
     flash("Backup restored.")
     return redirect(url_for("index"))
+
+
+# ----------------------------------------------------------------- sharing
+# A shared pet is a `.petobase` file: the Apple app's JSON backup format with
+# one pet and kind "cat-share". Files go both ways between the apps.
+
+SHARE_FORMAT = "cat-o-base-apple"
+SHARE_KIND = "cat-share"
+SHARE_DEFAULTS = {"photos": "profile", "details": True, "special": True, "food": True, "health": True,
+                  "weight": True, "visits": False, "documents": False, "journal": False,
+                  "notes": True, "contacts": True}
+WEB_TO_APP_KIND = {"medication": "medication", "flea/tick": "fleaTick", "deworming": "deworming",
+                   "supplement": "supplement", "other": "other"}
+APP_TO_WEB_KIND = {v: k for k, v in WEB_TO_APP_KIND.items()}
+DOC_TYPES = {"pdf": "com.adobe.pdf", "jpg": "public.jpeg", "jpeg": "public.jpeg", "png": "public.png",
+             "heic": "public.heic", "txt": "public.plain-text", "gif": "com.compuserve.gif"}
+
+
+def share_options(args):
+    opts = dict(SHARE_DEFAULTS)
+    if "photos" in args and args["photos"] in ("none", "profile", "all"):
+        opts["photos"] = args["photos"]
+    for key, default in SHARE_DEFAULTS.items():
+        if key != "photos" and key in args:
+            opts[key] = args.get(key) in ("1", "on", "true")
+    return opts
+
+
+def _iso_day(value):
+    """'2026-11-22' -> noon UTC, which shows as the same day in any time zone."""
+    d = pdate(value)
+    return f"{d.isoformat()}T12:00:00Z" if d else None
+
+
+def _iso_ts(value):
+    if not value:
+        return None
+    try:
+        return dt.datetime.fromisoformat(str(value)[:19]).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return _iso_day(value)
+
+
+def _parse_iso(value):
+    if not value:
+        return None
+    try:
+        return dt.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _day_from_iso(value):
+    """The calendar day an Apple-app date means. Days the web app wrote are noon UTC;
+    days the Apple app wrote are local midnight, so round to the nearest midnight."""
+    moment = _parse_iso(value)
+    if not moment:
+        return None
+    moment = moment.astimezone(dt.timezone.utc)
+    if (moment.hour, moment.minute, moment.second) == (12, 0, 0):
+        return moment.date().isoformat()
+    return (moment + dt.timedelta(hours=12)).date().isoformat()
+
+
+def _media_b64(name):
+    import base64
+    path = os.path.join(MEDIA, os.path.basename(name or ""))
+    if not name or not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("ascii")
+
+
+def pet_contacts_for_share(c):
+    if c["is_guest"]:
+        return guest_contacts(c)
+    return [{"role": k["role"] or "", "name": k["name"], "phone": k["phone"] or "",
+             "address": k["address"] or "", "notes": k["notes"] or ""}
+            for k in q("SELECT * FROM contacts ORDER BY role, name")]
+
+
+def build_share(c, opts, sender):
+    cid = c["id"]
+    if not c["share_id"]:
+        x("UPDATE cats SET share_id=? WHERE id=?", (str(uuid.uuid4()).upper(), cid))
+        c = get_cat(cid)
+    s = lambda v: v or ""
+    pet = {
+        "name": c["name"], "species": species_of(c),
+        "sex": c["sex"] if c["sex"] in ("female", "male") else "unknown",
+        "neutered": bool(c["neutered"]),
+        "breed": s(c["breed"]) if opts["details"] else "",
+        "markings": s(c["markings"]) if opts["details"] else "",
+        "microchip": s(c["microchip"]) if opts["details"] else "",
+        "birthdayApprox": bool(c["birthday_approx"]),
+        "specialNeeds": s(c["special_needs"]) if opts["special"] else "",
+        "allergies": s(c["allergies"]) if opts["special"] else "",
+        "foodBrand": s(c["food_brand"]) if opts["food"] else "",
+        "foodPortion": s(c["food_portion"]) if opts["food"] else "",
+        "foodSchedule": s(c["food_schedule"]) if opts["food"] else "",
+        "foodNotes": s(c["food_notes"]) if opts["food"] else "",
+        "notes": s(c["notes"]) if opts["notes"] else "",
+        "archived": False,
+        "createdAt": _iso_ts(c["created_at"]) or dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "shareID": c["share_id"],
+        "photos": [], "vaccinations": [], "treatments": [], "weights": [], "visits": [],
+        "documents": [], "journal": [],
+    }
+    if c["birthday"]:
+        pet["birthday"] = _iso_day(c["birthday"])
+    if opts["details"] and c["adoption_date"]:
+        pet["adoptionDate"] = _iso_day(c["adoption_date"])
+
+    photos = q("SELECT * FROM photos WHERE cat_id=? ORDER BY id", (cid,))
+    if opts["photos"] == "profile":
+        profile = [p for p in photos if p["id"] == c["profile_photo_id"]] or photos[-1:]
+        photos = profile
+    elif opts["photos"] == "none":
+        photos = []
+    for p in photos:
+        data = _media_b64(p["filename"])
+        if not data:
+            continue
+        photo_uuid = str(uuid.uuid4()).upper()
+        entry = {"uuid": photo_uuid, "image": data, "caption": s(p["caption"]),
+                 "addedAt": _iso_ts(p["created_at"]) or _iso_day(today().isoformat())}
+        if p["taken_on"]:
+            entry["takenOn"] = _iso_day(p["taken_on"])
+        pet["photos"].append(entry)
+        if p["id"] == c["profile_photo_id"] or len(photos) == 1:
+            pet["profilePhotoID"] = photo_uuid
+
+    if opts["health"]:
+        for v in q("SELECT * FROM vaccinations WHERE cat_id=?", (cid,)):
+            entry = {"name": v["name"], "vet": s(v["vet"]), "notes": s(v["notes"])}
+            if v["date_given"]: entry["dateGiven"] = _iso_day(v["date_given"])
+            if v["next_due"]: entry["nextDue"] = _iso_day(v["next_due"])
+            pet["vaccinations"].append(entry)
+        for t in q("SELECT * FROM treatments WHERE cat_id=?", (cid,)):
+            entry = {"kind": WEB_TO_APP_KIND.get(t["kind"] or "other", "other"), "name": t["name"],
+                     "dose": s(t["dose"]), "schedule": s(t["schedule"]), "active": bool(t["active"]),
+                     "notes": s(t["notes"])}
+            if t["interval_days"]: entry["intervalDays"] = int(t["interval_days"])
+            for web_key, app_key in (("last_given", "lastGiven"), ("next_due", "nextDue"), ("end_date", "endDate")):
+                if t[web_key]: entry[app_key] = _iso_day(t[web_key])
+            pet["treatments"].append(entry)
+    if opts["weight"]:
+        pet["weights"] = [{"date": _iso_day(w["date"]), "kg": w["kg"]}
+                          for w in q("SELECT * FROM weights WHERE cat_id=?", (cid,)) if pdate(w["date"])]
+    if opts["visits"]:
+        pet["visits"] = [{"date": _iso_day(v["date"]) or _iso_day(today().isoformat()), "clinic": s(v["clinic"]),
+                          "reason": s(v["reason"]), "outcome": s(v["outcome"]), "cost": s(v["cost"]),
+                          "notes": s(v["notes"])} for v in q("SELECT * FROM visits WHERE cat_id=?", (cid,))]
+    if opts["documents"]:
+        for d in q("SELECT * FROM documents WHERE cat_id=?", (cid,)):
+            data = _media_b64(d["filename"])
+            if not data:
+                continue
+            name = d["original_name"] or d["filename"]
+            ext = os.path.splitext(name)[1].lstrip(".").lower()
+            pet["documents"].append({"title": d["title"] or name, "filename": name,
+                                     "typeIdentifier": DOC_TYPES.get(ext, "public.data"), "data": data,
+                                     "addedAt": _iso_ts(d["created_at"]) or _iso_day(today().isoformat())})
+    if opts["journal"]:
+        pet["journal"] = [{"date": _iso_day(l["date"]) or _iso_day(today().isoformat()), "kind": l["kind"] or "note",
+                           "text": l["text"]} for l in q("SELECT * FROM logs WHERE cat_id=?", (cid,))]
+
+    file = {"format": SHARE_FORMAT, "version": 1, "kind": SHARE_KIND,
+            "exported": dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "cats": [pet], "contacts": pet_contacts_for_share(c) if opts["contacts"] else []}
+    if sender:
+        file["sharedBy"] = sender
+    return file
+
+
+def share_summary(c, opts, sender):
+    """Readable message for people without the app."""
+    label, emoji, _, _ = SPECIES[species_of(c)]
+    lines = [f"{emoji} {c['name']}"]
+    facts = [label.lower()]
+    age = age_filter(c["birthday"])
+    if age != "—":
+        facts.append(f"about {age}" if c["birthday_approx"] else age)
+    if c["sex"] in ("female", "male"):
+        facts.append(c["sex"] + (", neutered" if c["neutered"] else ""))
+    if opts["details"]:
+        facts += [v for v in (c["breed"], c["markings"]) if v]
+    lines.append(" · ".join(facts))
+    if opts["details"] and c["microchip"]:
+        lines.append(f"Microchip: {c['microchip']}")
+    if opts["special"]:
+        if c["special_needs"]:
+            lines.append(f"\n⚠️ Special needs: {c['special_needs']}")
+        if c["allergies"]:
+            lines.append(f"Allergies: {c['allergies']}")
+    if opts["food"]:
+        food = [v for v in (c["food_brand"], c["food_portion"], c["food_schedule"]) if v]
+        if food or c["food_notes"]:
+            lines.append("\n🍽 Food: " + ", ".join(food))
+            if c["food_notes"]:
+                lines.append(c["food_notes"])
+    if opts["health"]:
+        meds = q("SELECT * FROM treatments WHERE cat_id=? AND active=1 ORDER BY name", (c["id"],))
+        if meds:
+            lines.append("\n💊 Medication & treatments:")
+            for t in meds:
+                extra = ", ".join(v for v in (t["dose"], t["schedule"],
+                                              f"every {t['interval_days']} days" if t["interval_days"] else None) if v)
+                line = f"• {t['name']}" + (f" ({extra})" if extra else "")
+                if t["next_due"]:
+                    line += f", next {date_filter(t['next_due'])}"
+                lines.append(line)
+        vaccines = [d for d in due_items(c["id"]) if d["kind"] == "vaccine"]
+        if vaccines:
+            lines.append("\n💉 Vaccinations:")
+            lines += [f"• {d['item']}, next due {date_filter(d['due'])}" for d in vaccines]
+    if opts["weight"]:
+        w = q("SELECT * FROM weights WHERE cat_id=? ORDER BY date DESC, id DESC LIMIT 1", (c["id"],), one=True)
+        if w:
+            lines.append(f"\n⚖️ Weight: {w['kg']:g} kg ({date_filter(w['date'])})")
+    if opts["notes"] and c["notes"]:
+        lines.append(f"\n📝 {c['notes']}")
+    if opts["contacts"]:
+        contacts = pet_contacts_for_share(c)
+        if contacts:
+            lines.append("\n📞 Contacts:")
+            for k in contacts:
+                role = f"{k['role']}: " if k.get("role") else ""
+                phone = f", {k['phone']}" if k.get("phone") else ""
+                lines.append(f"{role}{k['name']}{phone}")
+    lines.append("\n— Shared from Pet-o-Base" + (f" by {sender}" if sender else ""))
+    return "\n".join(lines)
+
+
+@app.route("/cat/<int:cid>/summary.txt")
+def share_summary_text(cid):
+    c = get_cat(cid)
+    sender = (request.args.get("sender") or "").strip()
+    return Response(share_summary(c, share_options(request.args), sender), mimetype="text/plain")
+
+
+@app.route("/cat/<int:cid>/share.petobase")
+def share_file(cid):
+    c = get_cat(cid)
+    sender = (request.args.get("sender") or "").strip()
+    body = json.dumps(build_share(c, share_options(request.args), sender), ensure_ascii=False)
+    safe = "".join(ch for ch in c["name"] if ch not in '/\\:*?"<>|') or "Pet"
+    resp = Response(body, mimetype="application/x-catobase")
+    from urllib.parse import quote
+    resp.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(safe)}.petobase"
+    if sender:
+        resp.set_cookie("sender", sender, max_age=3600 * 24 * 365)
+    return resp
+
+
+def save_image_bytes(data):
+    class _Upload:
+        def __init__(self, raw):
+            self.stream = io.BytesIO(raw)
+    return save_image(_Upload(data))
+
+
+def import_share(raw, replace):
+    """Adds a shared pet (from either app) as a guest. Returns the new pet's id."""
+    import base64
+    obj = json.loads(raw)
+    if obj.get("format") != SHARE_FORMAT or obj.get("kind") != SHARE_KIND or not obj.get("cats"):
+        raise ValueError("this isn't a shared pet file")
+    pet = obj["cats"][0]
+    share_id = pet.get("shareID")
+    if share_id and replace:
+        for old in q("SELECT id FROM cats WHERE is_guest=1 AND share_id=?", (share_id,)):
+            _delete_pet(old["id"])
+
+    species = pet.get("species") or "cat"
+    cid = x("""INSERT INTO cats(name, species, sex, neutered, breed, markings, birthday, birthday_approx,
+               adoption_date, microchip, special_needs, allergies, food_brand, food_portion, food_schedule,
+               food_notes, notes, is_guest, guest_from, guest_since, guest_contacts, share_id)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)""",
+            (pet.get("name") or "Unnamed pet", species if species in SPECIES else "other",
+             pet.get("sex") if pet.get("sex") in ("female", "male") else None, 1 if pet.get("neutered") else 0,
+             pet.get("breed") or None, pet.get("markings") or None, _day_from_iso(pet.get("birthday")),
+             1 if pet.get("birthdayApprox") else 0, _day_from_iso(pet.get("adoptionDate")),
+             pet.get("microchip") or None, pet.get("specialNeeds") or None, pet.get("allergies") or None,
+             pet.get("foodBrand") or None, pet.get("foodPortion") or None, pet.get("foodSchedule") or None,
+             pet.get("foodNotes") or None, pet.get("notes") or None, obj.get("sharedBy") or None,
+             today().isoformat(), json.dumps(obj.get("contacts") or [], ensure_ascii=False), share_id))
+
+    for photo in pet.get("photos", []):
+        try:
+            name = save_image_bytes(base64.b64decode(photo.get("image", "")))
+        except (ValueError, TypeError):
+            name = None
+        if not name:
+            continue
+        pid = x("INSERT INTO photos(cat_id, filename, caption, taken_on) VALUES(?,?,?,?)",
+                (cid, name, photo.get("caption") or None, _day_from_iso(photo.get("takenOn"))))
+        if photo.get("uuid") and photo.get("uuid") == pet.get("profilePhotoID"):
+            x("UPDATE cats SET profile_photo_id=? WHERE id=?", (pid, cid))
+    for v in pet.get("vaccinations", []):
+        x("INSERT INTO vaccinations(cat_id, name, date_given, next_due, vet, notes) VALUES(?,?,?,?,?,?)",
+          (cid, v.get("name") or "Vaccine", _day_from_iso(v.get("dateGiven")), _day_from_iso(v.get("nextDue")),
+           v.get("vet") or None, v.get("notes") or None))
+    for t in pet.get("treatments", []):
+        x("""INSERT INTO treatments(cat_id, kind, name, dose, schedule, interval_days, last_given, next_due,
+             end_date, active, notes) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+          (cid, APP_TO_WEB_KIND.get(t.get("kind"), "other"), t.get("name") or "Treatment", t.get("dose") or None,
+           t.get("schedule") or None, t.get("intervalDays"), _day_from_iso(t.get("lastGiven")),
+           _day_from_iso(t.get("nextDue")), _day_from_iso(t.get("endDate")), 1 if t.get("active", True) else 0,
+           t.get("notes") or None))
+    for w in pet.get("weights", []):
+        day = _day_from_iso(w.get("date"))
+        if day and w.get("kg"):
+            x("INSERT INTO weights(cat_id, date, kg) VALUES(?,?,?)", (cid, day, float(w["kg"])))
+    for v in pet.get("visits", []):
+        x("INSERT INTO visits(cat_id, date, clinic, reason, outcome, cost, notes) VALUES(?,?,?,?,?,?,?)",
+          (cid, _day_from_iso(v.get("date")) or today().isoformat(), v.get("clinic") or None,
+           v.get("reason") or None, v.get("outcome") or None, v.get("cost") or None, v.get("notes") or None))
+    for d in pet.get("documents", []):
+        try:
+            data = base64.b64decode(d.get("data", ""))
+        except (ValueError, TypeError):
+            continue
+        original = d.get("filename") or "document"
+        ext = os.path.splitext(secure_filename(original))[1].lower()[:10]
+        stored = "d_" + uuid.uuid4().hex + ext
+        with open(os.path.join(MEDIA, stored), "wb") as f:
+            f.write(data)
+        x("INSERT INTO documents(cat_id, title, filename, original_name) VALUES(?,?,?,?)",
+          (cid, d.get("title") or original, stored, original))
+    for j in pet.get("journal", []):
+        x("INSERT INTO logs(cat_id, date, kind, text) VALUES(?,?,?,?)",
+          (cid, _day_from_iso(j.get("date")) or today().isoformat(), j.get("kind") or "note", j.get("text") or ""))
+    return cid
+
+
+def _delete_pet(cid):
+    for p in q("SELECT filename FROM photos WHERE cat_id=?", (cid,)):
+        rm_media(p["filename"])
+    for d in q("SELECT filename FROM documents WHERE cat_id=?", (cid,)):
+        rm_media(d["filename"])
+    x("DELETE FROM cats WHERE id=?", (cid,))
+
+
+@app.post("/import-pet")
+def import_pet():
+    f = request.files.get("file")
+    if not f or not f.filename:
+        flash("Choose a .petobase file first.")
+        return redirect(request.referrer or url_for("index"))
+    try:
+        cid = import_share(f.read(), replace=request.form.get("replace") == "1")
+    except (ValueError, KeyError, TypeError) as e:
+        flash(f"Couldn't import: {e}")
+        return redirect(request.referrer or url_for("index"))
+    flash("Added to Guest Pets.")
+    return redirect(url_for("cat", cid=cid))
 
 
 @app.errorhandler(413)

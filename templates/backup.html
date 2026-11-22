@@ -11,6 +11,18 @@
   </div>
 </section>
 
+<section class="panel">
+  <h2>Import a shared pet</h2>
+  <p class="muted small">A <code>.petobase</code> file sent from Pet-o-Base on iPhone or Mac, or downloaded from another copy of this web app. The pet is added under Guest Pets.</p>
+  <form method="post" action="{{ url_for('import_pet') }}" enctype="multipart/form-data" class="form">
+    <div class="grid">
+      <label>File<input type="file" name="file" accept=".petobase,.catobase,application/json" required></label>
+      <label class="check"><input type="checkbox" name="replace" value="1" checked> If I already have this pet from the same person, replace my copy</label>
+    </div>
+    <button class="btn">Import</button>
+  </form>
+</section>
+
 <section class="panel danger">
   <h2>Restore</h2>
   <p>Replaces <b>everything</b> in this instance with the contents of a full-backup .zip.</p>

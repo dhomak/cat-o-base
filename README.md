@@ -11,6 +11,17 @@ Flask + SQLite, no Docker needed. It's built to run in a tiny Proxmox LXC
 
 ## Features
 
+- **Any kind of pet:** cat, dog, rabbit, bird, rat or other, each with its
+  own icon, breed hint and vaccine suggestions.
+- **Guest pets** you look after for someone: owner's name, since when, and
+  their contacts, listed separately under Guest Pets.
+- **Sharing:** a readable summary to copy or send from your phone, and a
+  `.petobase` file that opens in Pet-o-Base on iPhone and Mac. Shared pets
+  from the iPhone app import here as guest pets (Backup page).
+- **Contacts** with call, SMS, WhatsApp and Telegram links. Numbers starting
+  with 0 get the country code from `CATOBASE_COUNTRY_CODE` (default 972).
+- **Sort** by name or age, and **search**.
+
 - **Cat cards** with photo, age, sex and current weight. A card gets a red or
   amber outline when something is overdue or due soon.
 - **Vaccinations** with "repeats every year / every 3 years". The next due date

@@ -171,3 +171,24 @@ body.sitter .sheet{background:#fff;color:#111;padding:2rem;border-radius:var(--r
   main{padding:0;max-width:none}
   body.sitter .sheet{padding:0;border:0}
 }
+
+/* species, guests, sharing, phone links */
+.noph .glyph{font-size:3.2rem;line-height:1;filter:saturate(.9)}
+.noph.big .glyph{font-size:5rem}
+.card h3 .sp{font-size:.95em;margin-right:.1rem}
+.chip.teal{background:color-mix(in srgb,#0d9488 14%,transparent);color:#0f766e}
+@media (prefers-color-scheme:dark){.chip.teal{color:#5eead4}}
+h3.group{margin:1.5rem 0 .75rem;font-size:1.05rem}
+.filters{display:flex;gap:.5rem;flex:1;justify-content:flex-end;flex-wrap:wrap}
+.filters input[type=search]{max-width:260px}
+.filters select{width:auto}
+.actions.tight{margin:0}
+.panel.guest{border-color:color-mix(in srgb,#0d9488 40%,var(--line))}
+.panel.guest h3{margin-top:0}
+.phone{display:inline-flex;flex-wrap:wrap;gap:.35rem .6rem;align-items:baseline}
+.phone .pa{font-size:.8rem;padding:.05rem .45rem;border:1px solid var(--line);border-radius:999px;color:var(--mut)}
+.phone .pa:hover{color:var(--accent);border-color:var(--accent);text-decoration:none}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0 1rem;margin:.25rem 0 .5rem}
+.checks label.check{margin:.3rem 0}
+pre.summary{white-space:pre-wrap;font:14px/1.5 var(--font);background:var(--line2);border-radius:8px;padding:.9rem 1rem;margin:.75rem 0}
+.gc{margin-bottom:.25rem}

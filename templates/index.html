@@ -1,4 +1,27 @@
 {% extends "base.html" %}
+{% macro card(c) %}{% set al = alerts.get(c.id, ()) %}{% set sp = SPECIES[species_of(c)] %}
+  <a class="card {% if 'overdue' in al %}alert{% elif 'soon' in al %}warn{% endif %}" href="{{ url_for('cat', cid=c.id) }}">
+    <div class="ph">
+      {% if c.photo %}<img src="{{ url_for('media', name='t_' ~ c.photo) }}" alt="{{ c.name }}" loading="lazy">
+      {% else %}<div class="noph"><span class="glyph">{{ sp[1] }}</span></div>{% endif %}
+    </div>
+    <div class="meta">
+      <h3><span class="sp" title="{{ sp[0] }}">{{ sp[1] }}</span> {{ c.name }}</h3>
+      {% set parts = [] %}
+      {% if c.birthday %}{% set _ = parts.append(('≈' if c.birthday_approx else '') ~ (c.birthday|age)) %}{% endif %}
+      {% if c.sex %}{% set _ = parts.append(c.sex) %}{% endif %}
+      {% if c.kg %}{% set _ = parts.append('%g'|format(c.kg) ~ ' kg') %}{% endif %}
+      <p>{{ parts|join(' · ') if parts else sp[0] }}</p>
+      <div class="chips">
+        {% if 'overdue' in al %}<span class="chip red">overdue</span>{% elif 'soon' in al %}<span class="chip amber">due soon</span>{% endif %}
+        {% if c.is_guest %}<span class="chip teal">{{ 'from ' ~ c.guest_from if c.guest_from else 'guest' }}</span>{% endif %}
+        {% if c.special_needs %}<span class="chip mag">special needs</span>{% endif %}
+        {% if c.allergies %}<span class="chip mag">allergies</span>{% endif %}
+      </div>
+    </div>
+  </a>
+{% endmacro %}
+{% block title %}Pets{% endblock %}
 {% block body %}
 {% if not arch %}
 <section class="panel">
@@ -8,32 +31,41 @@
 {% endif %}
 
 <div class="row-head">
-  <h2>{{ 'Archived' if arch else 'Cats' }}</h2>
-  {% if arch %}<a class="btn ghost" href="{{ url_for('index') }}">← back</a>
-  {% elif n_arch %}<a class="btn ghost" href="{{ url_for('index', archived=1) }}">archived ({{ n_arch }})</a>{% endif %}
+  <h2>{{ 'Archived' if arch else 'Pets' }}</h2>
+  <form class="filters" method="get">
+    {% if arch %}<input type="hidden" name="archived" value="1">{% endif %}
+    <input type="search" name="q" value="{{ search }}" placeholder="Search pets" aria-label="Search pets">
+    <select name="sort" onchange="this.form.submit()" aria-label="Sort">
+      {% for key, label in sorts.items() %}<option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </form>
+  <div class="actions tight">
+    {% if arch %}<a class="btn ghost" href="{{ url_for('index') }}">← back</a>
+    {% else %}
+      <a class="btn ghost" href="{{ url_for('cat_form', guest=1) }}" title="A pet you're looking after for someone">+ guest pet</a>
+      {% if n_arch %}<a class="btn ghost" href="{{ url_for('index', archived=1) }}">archived ({{ n_arch }})</a>{% endif %}
+    {% endif %}
+  </div>
 </div>
 
+{% if search and not mine and not guests %}
+<p class="muted">No pets match “{{ search }}”.</p>
+{% endif %}
+
+{% if mine or not guests %}
+{% if guests %}<h3 class="group">My Pets</h3>{% endif %}
 <div class="cards">
-  {% for c in cats %}{% set al = alerts.get(c.id, ()) %}
-  <a class="card {% if 'overdue' in al %}alert{% elif 'soon' in al %}warn{% endif %}" href="{{ url_for('cat', cid=c.id) }}">
-    <div class="ph">
-      {% if c.photo %}<img src="{{ url_for('media', name='t_' ~ c.photo) }}" alt="{{ c.name }}" loading="lazy">
-      {% else %}<div class="noph">=^.^=</div>{% endif %}
-    </div>
-    <div class="meta">
-      <h3>{{ c.name }}</h3>
-      <p>{{ c.birthday|age }}{% if c.birthday_approx %}≈{% endif %}
-         {% if c.sex %} · {{ c.sex }}{% endif %}{% if c.kg %} · {{ '%g'|format(c.kg) }} kg{% endif %}</p>
-      <div class="chips">
-        {% if 'overdue' in al %}<span class="chip red">overdue</span>{% elif 'soon' in al %}<span class="chip amber">due soon</span>{% endif %}
-        {% if c.special_needs %}<span class="chip mag">special needs</span>{% endif %}
-        {% if c.allergies %}<span class="chip mag">allergies</span>{% endif %}
-      </div>
-    </div>
-  </a>
-  {% endfor %}
-  {% if not arch %}
-  <a class="card add" href="{{ url_for('cat_form') }}"><span>+</span><p>Add a cat</p></a>
+  {% for c in mine %}{{ card(c) }}{% endfor %}
+  {% if not arch and not search %}
+  <a class="card add" href="{{ url_for('cat_form') }}"><span>+</span><p>Add a pet</p></a>
   {% endif %}
 </div>
+{% endif %}
+
+{% if guests %}
+<h3 class="group" title="Pets you look after for other people, or that were shared with you">Guest Pets</h3>
+<div class="cards">
+  {% for c in guests %}{{ card(c) }}{% endfor %}
+</div>
+{% endif %}
 {% endblock %}

@@ -64,6 +64,19 @@ enum WebImport {
             guard let id = row.int("id") else { continue }
             var cat = CatDTO()
             cat.name = row.text("name")
+            let species = row.text("species").lowercased()
+            cat.species = species.isEmpty ? "cat" : species
+            if row.bool("is_guest") {
+                cat.isGuest = true
+                cat.guestFrom = row.text("guest_from")
+                cat.guestReceivedAt = row.day("guest_since")
+                if let json = row.text("guest_contacts").data(using: .utf8),
+                   let contacts = try? JSONDecoder().decode([WebContact].self, from: json) {
+                    cat.guestContacts = contacts.map(\.dto)
+                }
+            }
+            let shareID = row.text("share_id")
+            if !shareID.isEmpty { cat.shareID = UUID(uuidString: shareID) }
             let sex = row.text("sex").lowercased()
             cat.sex = CatSex(rawValue: sex)?.rawValue ?? CatSex.unknown.rawValue
             cat.neutered = row.bool("neutered")
@@ -152,6 +165,20 @@ enum WebImport {
         case "supplement": return .supplement
         default: return .other
         }
+    }
+}
+
+/// A guest contact as the web app stores it (some fields may be missing).
+private struct WebContact: Decodable {
+    var role: String?
+    var name: String?
+    var phone: String?
+    var address: String?
+    var notes: String?
+
+    var dto: ContactDTO {
+        ContactDTO(role: role ?? "", name: name ?? "", phone: phone ?? "",
+                   address: address ?? "", notes: notes ?? "")
     }
 }
 

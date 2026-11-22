@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_phone.html" import phone %}
 {% block title %}Contacts{% endblock %}
 {% block body %}
 <section class="panel">
@@ -8,7 +9,7 @@
   <ul class="list">
     {% for k in contacts %}
     <li><div class="li-main"><span class="tag">{{ (k.role or 'contact')|upper }}</span> <b>{{ k.name }}</b>
-      {% if k.phone %} · <a href="tel:{{ k.phone }}">{{ k.phone }}</a>{% endif %}
+      {% if k.phone %}<div>{{ phone(k.phone) }}</div>{% endif %}
       {% if k.address %}<div class="sub">{{ k.address }}</div>{% endif %}
       {% if k.notes %}<div class="sub pre">{{ k.notes }}</div>{% endif %}</div>
       <div class="li-act"><form method="post" action="{{ url_for('contact_delete', rid=k.id) }}" class="inline" data-confirm="Delete this contact?"><button class="x">×</button></form></div></li>
@@ -19,7 +20,7 @@
     <div class="grid">
       <label>Role<input name="role" list="roles" placeholder="vet"></label>
       <label>Name *<input name="name" required></label>
-      <label>Phone<input name="phone" type="tel"></label>
+      <label>Phone<input name="phone" type="tel" placeholder="+972 3 000 0000"></label>
     </div>
     <datalist id="roles"><option>vet</option><option>emergency vet</option><option>insurance</option><option>owner</option><option>backup sitter</option><option>neighbour</option></datalist>
     <label>Address<input name="address"></label>

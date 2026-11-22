@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Cats{% endblock %} · Pet-o-Base</title>
+<title>{% block title %}Pets{% endblock %} · Pet-o-Base</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
@@ -13,7 +13,7 @@
 <header class="top">
   <a href="{{ url_for('index') }}" class="logo"><img src="{{ url_for('static', filename='icon.svg') }}" alt="">Pet-o-Base</a>
   <nav>
-    <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="on"{% endif %}>Cats</a>
+    <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="on"{% endif %}>Pets</a>
     <a href="{{ url_for('due_page') }}" {% if request.endpoint=='due_page' %}class="on"{% endif %}>Due</a>
     <a href="{{ url_for('contacts') }}" {% if request.endpoint=='contacts' %}class="on"{% endif %}>Contacts</a>
     <a href="{{ url_for('sitter') }}">Sitter sheet</a>

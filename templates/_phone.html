@@ -1,0 +1,12 @@
+{# Phone number with call / SMS / WhatsApp / Telegram links. #}
+{% macro phone(number) -%}
+{% set links = phone_links(number) %}
+{% if links %}
+<span class="phone">
+  <a href="{{ links.tel }}" title="Call">📞 {{ number }}</a>
+  <a class="pa" href="{{ links.sms }}" title="Text message">SMS</a>
+  <a class="pa" href="{{ links.whatsapp }}" target="_blank" rel="noopener" title="WhatsApp">WhatsApp</a>
+  <a class="pa" href="{{ links.telegram }}" target="_blank" rel="noopener" title="Telegram (if they allow finding them by number)">Telegram</a>
+</span>
+{% elif number %}<span>{{ number }}</span>{% endif %}
+{%- endmacro %}

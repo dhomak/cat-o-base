@@ -1,19 +1,22 @@
 {% extends "base.html" %}
+{% from "_phone.html" import phone %}
 {% block title %}{{ c.name }}{% endblock %}
 {% macro del(kind, id) -%}
 <form method="post" action="{{ url_for('delete', kind=kind, rid=id) }}" class="inline" data-confirm="Delete this entry?">
   <button class="x" title="Delete">×</button></form>
 {%- endmacro %}
 {% block body %}
+{% set sp = SPECIES[species_of(c)] %}
 
 <section class="hero panel">
   <div class="hero-ph">
     {% if profile %}<img src="{{ url_for('media', name=profile.filename) }}" alt="{{ c.name }}">
-    {% else %}<div class="noph big">=^.^=</div>{% endif %}
+    {% else %}<div class="noph big"><span class="glyph">{{ sp[1] }}</span></div>{% endif %}
   </div>
   <div class="hero-info">
     <h1>{{ c.name }} {% if c.archived %}<span class="chip">archived</span>{% endif %}</h1>
     <dl class="facts">
+      <div><dt>Species</dt><dd>{{ sp[1] }} {{ sp[0] }}</dd></div>
       <div><dt>Age</dt><dd>{{ c.birthday|age }}{% if c.birthday_approx %} (approx.){% endif %}</dd></div>
       <div><dt>Born</dt><dd>{{ c.birthday|d }}</dd></div>
       <div><dt>Sex</dt><dd>{{ c.sex or '—' }}{% if c.neutered %}, neutered{% endif %}</dd></div>
@@ -26,9 +29,28 @@
     <div class="actions">
       <a class="btn" href="{{ url_for('cat_form', cid=c.id) }}">Edit</a>
       <a class="btn ghost" href="{{ url_for('sitter', cat=c.id) }}">Sitter sheet</a>
+      <a class="btn ghost" href="#share">Share</a>
     </div>
   </div>
 </section>
+
+{% if c.is_guest %}
+<section class="panel guest">
+  <h3>👥 Guest pet{% if c.guest_from %} from {{ c.guest_from }}{% endif %}</h3>
+  <p class="muted small">{% if c.share_id %}Received {{ c.guest_since|d }}. Your own copy: edits stay here, and a new share from the owner can update it.
+     {% else %}Staying since {{ c.guest_since|d }}.{% endif %}</p>
+  {% set gcs = guest_contacts(c) %}
+  {% if gcs %}
+  <ul class="list">
+    {% for k in gcs %}
+    <li><div class="li-main">{% if k.role %}<span class="tag">{{ k.role|upper }}</span> {% endif %}<b>{{ k.name }}</b>
+      <div>{{ phone(k.phone) }}</div>
+      {% if k.address %}<div class="sub">{{ k.address }}</div>{% endif %}</div></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
 
 {% if c.special_needs or c.allergies %}
 <section class="panel callout">
@@ -64,7 +86,7 @@
   <details><summary>+ add vaccination</summary>
     <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='vaccine') }}" class="form">
       <div class="grid">
-        <label>Vaccine *<input name="name" list="vaxlist" required placeholder="Rabies"></label>
+        <label>Vaccine *<input name="name" list="vaxlist" required placeholder="{{ sp[3][0] if sp[3] else 'Vaccine name' }}"></label>
         <label>Date given<input type="date" name="date_given" value="{{ today() }}"></label>
         <label>Repeats
           <select name="repeat_months"><option value="">— set date manually —</option>
@@ -74,7 +96,7 @@
         <label>Vet / clinic<input name="vet"></label>
         <label>Notes<input name="notes" placeholder="batch #, reaction…"></label>
       </div>
-      <datalist id="vaxlist"><option>Rabies</option><option>FVRCP (tricat)</option><option>FeLV</option><option>FIP</option><option>Chlamydia</option></datalist>
+      <datalist id="vaxlist">{% for v in sp[3] %}<option>{{ v }}</option>{% endfor %}</datalist>
       <button class="btn">Add</button>
     </form>
   </details>
@@ -266,4 +288,73 @@
   </ul>
   {% endif %}
 </section>
+
+<section class="panel" id="share">
+  <h2>Share {{ c.name }}</h2>
+  <form id="shareform" class="form" onsubmit="return false">
+    <div class="grid">
+      <label>Your name<input name="sender" value="{{ request.cookies.get('sender', '') }}" placeholder="shown to the person you share with"></label>
+      <label>Photos
+        <select name="photos"><option value="none">None</option><option value="profile" selected>Profile photo</option><option value="all">All photos</option></select></label>
+    </div>
+    <div class="checks">
+      {% for key, label, on in [('details','Breed, markings, microchip',1),('special','Special needs & allergies',1),('food','Food',1),
+                                ('health','Vaccinations & medications',1),('weight','Weight history',1),('visits','Vet visits',0),
+                                ('documents','Documents',0),('journal','Journal',0),('notes','Notes',1),('contacts','Contacts',1)] %}
+      <label class="check"><input type="checkbox" name="{{ key }}" value="1" {% if on %}checked{% endif %}> {{ label }}</label>
+      {% endfor %}
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="share_native" hidden>Share…</button>
+      <button type="button" class="btn ghost" id="share_copy">Copy text</button>
+      <a class="btn ghost" id="share_file" href="#" download>Download .petobase</a>
+    </div>
+  </form>
+  <pre class="summary" id="share_text">…</pre>
+  <p class="muted small">The text is for anyone. The <code>.petobase</code> file opens in Pet-o-Base on iPhone and Mac, or in this web app (Backup → Import a shared pet), and adds {{ c.name }} as a guest pet.</p>
+</section>
+<script>
+(() => {
+  const form = document.getElementById('shareform');
+  const out = document.getElementById('share_text');
+  const fileLink = document.getElementById('share_file');
+  const base = "{{ url_for('share_summary_text', cid=c.id) }}";
+  const fileBase = "{{ url_for('share_file', cid=c.id) }}";
+  const params = () => {
+    const p = new URLSearchParams();
+    p.set('sender', form.sender.value.trim());
+    p.set('photos', form.photos.value);
+    form.querySelectorAll('input[type=checkbox]').forEach(b => p.set(b.name, b.checked ? '1' : '0'));
+    return p;
+  };
+  const refresh = async () => {
+    const p = params();
+    fileLink.href = fileBase + '?' + p;
+    out.textContent = await (await fetch(base + '?' + p)).text();
+  };
+  form.addEventListener('change', refresh);
+  form.sender.addEventListener('input', () => { clearTimeout(form._t); form._t = setTimeout(refresh, 300); });
+  document.getElementById('share_copy').addEventListener('click', async e => {
+    try { await navigator.clipboard.writeText(out.textContent); e.target.textContent = 'Copied ✓'; }
+    catch { e.target.textContent = 'Select the text below'; }
+    setTimeout(() => e.target.textContent = 'Copy text', 1800);
+  });
+  // Phone browsers can share the file and text straight to Messages, Telegram, WhatsApp…
+  const native = document.getElementById('share_native');
+  if (navigator.share) {
+    native.hidden = false;
+    native.addEventListener('click', async () => {
+      const p = params();
+      const blob = await (await fetch(fileBase + '?' + p)).blob();
+      const file = new File([blob], {{ (c.name ~ '.petobase')|tojson }}, {type: 'application/octet-stream'});
+      const data = {title: {{ c.name|tojson }}, text: out.textContent};
+      try {
+        if (navigator.canShare && navigator.canShare({files: [file]})) data.files = [file];
+        await navigator.share(data);
+      } catch (err) { /* cancelled */ }
+    });
+  }
+  refresh();
+})();
+</script>
 {% endblock %}

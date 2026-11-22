@@ -9,7 +9,7 @@
 
 <div class="sheet">
   <header class="sheet-head">
-    <h1>Cat care sheet</h1>
+    <h1>Pet care sheet</h1>
     <p>Updated {{ generated|d }}</p>
   </header>
 
@@ -28,7 +28,7 @@
       {% if c.photo %}<img src="{{ url_for('media', name='t_' ~ c.photo) }}" alt="">{% endif %}
       <div>
         <h2>{{ c.name }}</h2>
-        <p>{{ c.birthday|age }} · {{ c.sex or '' }}{% if c.markings %} · {{ c.markings }}{% endif %}{% if c.microchip %} · chip {{ c.microchip }}{% endif %}</p>
+        <p>{{ SPECIES[species_of(c)][1] }} {{ SPECIES[species_of(c)][0] }} · {{ c.birthday|age }} · {{ c.sex or '' }}{% if c.markings %} · {{ c.markings }}{% endif %}{% if c.microchip %} · chip {{ c.microchip }}{% endif %}</p>
       </div>
     </div>
     <dl>
@@ -40,10 +40,12 @@
       {% if c.special_needs %}<dt>Special needs</dt><dd class="pre">{{ c.special_needs }}</dd>{% endif %}
       {% if c.allergies %}<dt>Allergies</dt><dd class="pre">{{ c.allergies }}</dd>{% endif %}
       {% if c.notes %}<dt>Good to know</dt><dd class="pre">{{ c.notes }}</dd>{% endif %}
+      {% if c.is_guest and guest_contacts(c) %}<dt>Owner's contacts</dt><dd><ul>{% for k in guest_contacts(c) %}
+        <li>{% if k.role %}<b>{{ k.role }}:</b> {% endif %}{{ k.name }}{% if k.phone %}, {{ k.phone }}{% endif %}</li>{% endfor %}</ul></dd>{% endif %}
     </dl>
   </article>
   {% else %}
-  <p>No cats yet.</p>
+  <p>No pets yet.</p>
   {% endfor %}
 </div>
 {% endblock %}
