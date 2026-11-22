@@ -39,7 +39,7 @@ echo "==> Creating user and folders"
 id "$SVC_USER" &>/dev/null || useradd --system --home-dir "$DATA_DIR" --shell /usr/sbin/nologin "$SVC_USER"
 mkdir -p "$APP_DIR" "$DATA_DIR/media"
 rm -rf "$APP_DIR/templates" "$APP_DIR/static"
-cp -r "$SRC/app.py" "$SRC/requirements.txt" "$SRC/templates" "$SRC/static" "$APP_DIR/"
+cp -r "$SRC/app.py" "$SRC/i18n.py" "$SRC/translations.py" "$SRC/requirements.txt" "$SRC/templates" "$SRC/static" "$APP_DIR/"
 chown -R "$SVC_USER:$SVC_USER" "$DATA_DIR"
 
 echo "==> Setting up Python environment"

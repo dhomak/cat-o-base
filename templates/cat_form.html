@@ -1,88 +1,87 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit ' ~ cat.name if cid else 'New pet' }}{% endblock %}
+{% block title %}{{ _('Edit {name}', name=cat.name) if cid else _('New pet') }}{% endblock %}
 {% block body %}
 {% set is_guest = cat.is_guest in (1, '1', 'on', True) %}
 <form method="post" enctype="multipart/form-data" class="panel form">
-  <h2>{{ 'Edit ' ~ cat.name if cid else ('New guest pet' if is_guest else 'New pet') }}</h2>
+  <h2>{{ _('Edit {name}', name=cat.name) if cid else (_('New guest pet') if is_guest else _('New pet')) }}</h2>
 
-  <fieldset><legend>Basics</legend>
+  <fieldset><legend>{{ _("Basics") }}</legend>
     <div class="grid">
-      <label>Name *<input name="name" required value="{{ cat.name or '' }}" autofocus></label>
-      <label>Species
+      <label>{{ _("Name *") }}<input name="name" required value="{{ cat.name or '' }}" autofocus></label>
+      <label>{{ _("Species") }}
         <select name="species" id="species">{% set current = species_of(cat) if cat else 'cat' %}
           {% for key, sp in SPECIES.items() %}
-          <option value="{{ key }}" data-hint="e.g. {{ sp[2] }}" {% if key == current %}selected{% endif %}>{{ sp[1] }} {{ sp[0] }}</option>
+          <option value="{{ key }}" data-hint="{{ _('e.g. {example}', example=_(sp[2])) }}" {% if key == current %}selected{% endif %}>{{ sp[1] }} {{ _(sp[0]) }}</option>
           {% endfor %}
         </select></label>
-      <label>Sex
+      <label>{{ _("Sex") }}
         <select name="sex">{% for s in ['', 'female', 'male'] %}
-          <option value="{{ s }}" {% if (cat.sex or '')==s %}selected{% endif %}>{{ s or '—' }}</option>{% endfor %}
+          <option value="{{ s }}" {% if (cat.sex or '')==s %}selected{% endif %}>{{ sex_label(s) if s else '—' }}</option>{% endfor %}
         </select></label>
-      <label class="check"><input type="checkbox" name="neutered" {% if cat.neutered %}checked{% endif %}> Neutered / spayed</label>
-      <label>Breed<input name="breed" id="breed" value="{{ cat.breed or '' }}" placeholder="e.g. {{ SPECIES[species_of(cat) if cat else 'cat'][2] }}"></label>
-      <label>Colour &amp; markings<input name="markings" value="{{ cat.markings or '' }}" placeholder="black, white socks"></label>
-      <label>Microchip #<input name="microchip" value="{{ cat.microchip or '' }}" inputmode="numeric"></label>
-      <label>Birthday<input type="date" name="birthday" value="{{ cat.birthday or '' }}"></label>
-      <label class="check"><input type="checkbox" name="birthday_approx" {% if cat.birthday_approx %}checked{% endif %}> Birthday is approximate</label>
-      <label>Adoption / gotcha day<input type="date" name="adoption_date" value="{{ cat.adoption_date or '' }}"></label>
+      <label class="check"><input type="checkbox" name="neutered" {% if cat.neutered %}checked{% endif %}> {{ _("Neutered / spayed") }}</label>
+      <label>{{ _("Breed") }}<input name="breed" id="breed" value="{{ cat.breed or '' }}" placeholder="{{ _('e.g. {example}', example=_(SPECIES[species_of(cat) if cat else 'cat'][2])) }}"></label>
+      <label>{{ _("Colour & markings") }}<input name="markings" value="{{ cat.markings or '' }}" placeholder="{{ _("black, white socks") }}"></label>
+      <label>{{ _("Microchip #") }}<input name="microchip" value="{{ cat.microchip or '' }}" inputmode="numeric"></label>
+      <label>{{ _("Birthday") }}<input type="date" name="birthday" value="{{ cat.birthday or '' }}"></label>
+      <label class="check"><input type="checkbox" name="birthday_approx" {% if cat.birthday_approx %}checked{% endif %}> {{ _("Birthday is approximate") }}</label>
+      <label>{{ _("Adoption / gotcha day") }}<input type="date" name="adoption_date" value="{{ cat.adoption_date or '' }}"></label>
     </div>
-    {% if not cid %}<label>Profile photo<input type="file" name="photo" accept="image/*"></label>{% endif %}
+    {% if not cid %}<label>{{ _("Profile photo") }}<input type="file" name="photo" accept="image/*"></label>{% endif %}
   </fieldset>
 
-  <fieldset><legend>Guest</legend>
-    <label class="check"><input type="checkbox" name="is_guest" id="is_guest" {% if is_guest %}checked{% endif %}> Guest pet: one I'm looking after for someone</label>
+  <fieldset><legend>{{ _("Guest") }}</legend>
+    <label class="check"><input type="checkbox" name="is_guest" id="is_guest" {% if is_guest %}checked{% endif %}> {{ _("Guest pet: one I'm looking after for someone") }}</label>
     <div id="guest_fields" {% if not is_guest %}hidden{% endif %}>
       <div class="grid">
-        <label>Owner's name<input name="guest_from" value="{{ cat.guest_from or '' }}" placeholder="e.g. Anna"></label>
-        <label>Staying since<input type="date" name="guest_since" value="{{ cat.guest_since or '' }}"></label>
+        <label>{{ _("Owner's name") }}<input name="guest_from" value="{{ cat.guest_from or '' }}" placeholder="{{ _("e.g. Anna") }}"></label>
+        <label>{{ _("Staying since") }}<input type="date" name="guest_since" value="{{ cat.guest_since or '' }}"></label>
       </div>
-      <p class="muted small">Owner's contacts: shown on this pet's page and sitter sheet. Use the country code (+972…) for WhatsApp.</p>
+      <p class="muted small">{{ _("Owner's contacts: shown on this pet's page and sitter sheet. Use the country code (+972…) for WhatsApp.") }}</p>
       <div id="gc_rows">
         {% set gcs = guest_contacts(cat) if cat else [] %}
         {% for k in (gcs if gcs else [{'role': 'Owner', 'name': '', 'phone': ''}]) %}
         <div class="grid gc">
-          <label>Role<input name="gc_role" value="{{ k.role or '' }}" placeholder="Owner, their vet…"></label>
-          <label>Name<input name="gc_name" value="{{ k.name or '' }}"></label>
-          <label>Phone<input name="gc_phone" type="tel" value="{{ k.phone or '' }}" placeholder="+972 3 000 0000"></label>
+          <label>{{ _("Role") }}<input name="gc_role" value="{{ k.role or '' }}" placeholder="{{ _("Owner, their vet…") }}"></label>
+          <label>{{ _("Name") }}<input name="gc_name" value="{{ k.name or '' }}"></label>
+          <label>{{ _("Phone") }}<input name="gc_phone" type="tel" value="{{ k.phone or '' }}" placeholder="+972 3 000 0000"></label>
         </div>
         {% endfor %}
       </div>
-      <button type="button" class="btn tiny ghost" id="gc_add">+ contact</button>
+      <button type="button" class="btn tiny ghost" id="gc_add">{{ _("+ contact") }}</button>
     </div>
   </fieldset>
 
-  <fieldset><legend>Health</legend>
-    <label>Special needs<textarea name="special_needs" rows="3" placeholder="kidney diet, deaf in one ear, needs a ramp…">{{ cat.special_needs or '' }}</textarea></label>
-    <label>Allergies / intolerances<textarea name="allergies" rows="2">{{ cat.allergies or '' }}</textarea></label>
+  <fieldset><legend>{{ _("Health") }}</legend>
+    <label>{{ _("Special needs") }}<textarea name="special_needs" rows="3" placeholder="{{ _("kidney diet, deaf in one ear, needs a ramp…") }}">{{ cat.special_needs or '' }}</textarea></label>
+    <label>{{ _("Allergies / intolerances") }}<textarea name="allergies" rows="2">{{ cat.allergies or '' }}</textarea></label>
   </fieldset>
 
-  <fieldset><legend>Food</legend>
+  <fieldset><legend>{{ _("Food") }}</legend>
     <div class="grid">
-      <label>Food &amp; brand<input name="food_brand" value="{{ cat.food_brand or '' }}" placeholder="Royal Canin Renal, wet"></label>
-      <label>Portion<input name="food_portion" value="{{ cat.food_portion or '' }}" placeholder="½ pouch + 30 g dry"></label>
-      <label>Schedule<input name="food_schedule" value="{{ cat.food_schedule or '' }}" placeholder="08:00 and 20:00"></label>
+      <label>{{ _("Food & brand") }}<input name="food_brand" value="{{ cat.food_brand or '' }}" placeholder="{{ _("Royal Canin Renal, wet") }}"></label>
+      <label>{{ _("Portion") }}<input name="food_portion" value="{{ cat.food_portion or '' }}" placeholder="{{ _("½ pouch + 30 g dry") }}"></label>
+      <label>{{ _("Schedule") }}<input name="food_schedule" value="{{ cat.food_schedule or '' }}" placeholder="{{ _("08:00 and 20:00") }}"></label>
     </div>
-    <label>Special food needs, treats, refuses…<textarea name="food_notes" rows="3">{{ cat.food_notes or '' }}</textarea></label>
+    <label>{{ _("Special food needs, treats, refuses…") }}<textarea name="food_notes" rows="3">{{ cat.food_notes or '' }}</textarea></label>
   </fieldset>
 
-  <fieldset><legend>Notes</legend>
-    <textarea name="notes" rows="5" placeholder="personality, quirks, hiding spots, how to give pills…">{{ cat.notes or '' }}</textarea>
-    {% if cid %}<label class="check"><input type="checkbox" name="archived" {% if cat.archived %}checked{% endif %}> Archive (hide from main list, keep records)</label>{% endif %}
+  <fieldset><legend>{{ _("Notes") }}</legend>
+    <textarea name="notes" rows="5" placeholder="{{ _("personality, quirks, hiding spots, how to give pills…") }}">{{ cat.notes or '' }}</textarea>
+    {% if cid %}<label class="check"><input type="checkbox" name="archived" {% if cat.archived %}checked{% endif %}> {{ _("Archive (hide from main list, keep records)") }}</label>{% endif %}
   </fieldset>
 
   <div class="actions">
-    <button class="btn">Save</button>
-    <a class="btn ghost" href="{{ url_for('cat', cid=cid) if cid else url_for('index') }}">Cancel</a>
+    <button class="btn">{{ _("Save") }}</button>
+    <a class="btn ghost" href="{{ url_for('cat', cid=cid) if cid else url_for('index') }}">{{ _("Cancel") }}</a>
   </div>
 </form>
 
 {% if cid %}
 <details class="panel danger">
-  <summary>Delete this cat permanently</summary>
+  <summary>{{ _("Delete this pet permanently") }}</summary>
   <form method="post" action="{{ url_for('cat_delete', cid=cid) }}">
-    <p>This deletes all records, photos and documents for {{ cat.name }}. Archiving is usually the better choice.
-       Type <b>{{ cat.name }}</b> to confirm.</p>
-    <input name="confirm" autocomplete="off"> <button class="btn red">Delete forever</button>
+    <p>{{ _("This deletes all records, photos and documents for {name}. Archiving is usually the better choice. Type the name to confirm:", name=cat.name) }} <b>{{ cat.name }}</b></p>
+    <input name="confirm" autocomplete="off"> <button class="btn red">{{ _("Delete forever") }}</button>
   </form>
 </details>
 {% endif %}

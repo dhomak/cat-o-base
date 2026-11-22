@@ -2,8 +2,8 @@
 {% from "_phone.html" import phone %}
 {% block title %}{{ c.name }}{% endblock %}
 {% macro del(kind, id) -%}
-<form method="post" action="{{ url_for('delete', kind=kind, rid=id) }}" class="inline" data-confirm="Delete this entry?">
-  <button class="x" title="Delete">×</button></form>
+<form method="post" action="{{ url_for('delete', kind=kind, rid=id) }}" class="inline" data-confirm="{{ _("Delete this entry?") }}">
+  <button class="x" title="{{ _("Delete") }}">×</button></form>
 {%- endmacro %}
 {% block body %}
 {% set sp = SPECIES[species_of(c)] %}
@@ -14,31 +14,31 @@
     {% else %}<div class="noph big"><span class="glyph">{{ sp[1] }}</span></div>{% endif %}
   </div>
   <div class="hero-info">
-    <h1>{{ c.name }} {% if c.archived %}<span class="chip">archived</span>{% endif %}</h1>
+    <h1>{{ c.name }} {% if c.archived %}<span class="chip">{{ _("archived") }}</span>{% endif %}</h1>
     <dl class="facts">
-      <div><dt>Species</dt><dd>{{ sp[1] }} {{ sp[0] }}</dd></div>
-      <div><dt>Age</dt><dd>{{ c.birthday|age }}{% if c.birthday_approx %} (approx.){% endif %}</dd></div>
-      <div><dt>Born</dt><dd>{{ c.birthday|d }}</dd></div>
-      <div><dt>Sex</dt><dd>{{ c.sex or '—' }}{% if c.neutered %}, neutered{% endif %}</dd></div>
-      <div><dt>Weight</dt><dd>{% if trend %}{{ '%g'|format(trend.kg) }} kg{% else %}—{% endif %}</dd></div>
-      <div><dt>Breed</dt><dd>{{ c.breed or '—' }}</dd></div>
-      <div><dt>Markings</dt><dd>{{ c.markings or '—' }}</dd></div>
-      <div><dt>Microchip</dt><dd class="mono">{{ c.microchip or '—' }}</dd></div>
-      <div><dt>Gotcha day</dt><dd>{{ c.adoption_date|d }}</dd></div>
+      <div><dt>{{ _("Species") }}</dt><dd>{{ sp[1] }} {{ _(sp[0]) }}</dd></div>
+      <div><dt>{{ _("Age") }}</dt><dd>{{ c.birthday|age }}{% if c.birthday_approx %} {{ _("(approx.)") }}{% endif %}</dd></div>
+      <div><dt>{{ _("Born") }}</dt><dd>{{ c.birthday|d }}</dd></div>
+      <div><dt>{{ _("Sex") }}</dt><dd>{{ sex_label(c.sex) or '—' }}{% if c.neutered %}, {{ _("neutered") }}{% endif %}</dd></div>
+      <div><dt>{{ _("Weight") }}</dt><dd>{% if trend %}{{ _("{kg} kg", kg='%g'|format(trend.kg)) }}{% else %}—{% endif %}</dd></div>
+      <div><dt>{{ _("Breed") }}</dt><dd>{{ c.breed or '—' }}</dd></div>
+      <div><dt>{{ _("Markings") }}</dt><dd>{{ c.markings or '—' }}</dd></div>
+      <div><dt>{{ _("Microchip") }}</dt><dd class="mono">{{ c.microchip or '—' }}</dd></div>
+      <div><dt>{{ _("Gotcha day") }}</dt><dd>{{ c.adoption_date|d }}</dd></div>
     </dl>
     <div class="actions">
-      <a class="btn" href="{{ url_for('cat_form', cid=c.id) }}">Edit</a>
-      <a class="btn ghost" href="{{ url_for('sitter', cat=c.id) }}">Sitter sheet</a>
-      <a class="btn ghost" href="#share">Share</a>
+      <a class="btn" href="{{ url_for('cat_form', cid=c.id) }}">{{ _("Edit") }}</a>
+      <a class="btn ghost" href="{{ url_for('sitter', cat=c.id) }}">{{ _("Sitter sheet") }}</a>
+      <a class="btn ghost" href="#share">{{ _("Share") }}</a>
     </div>
   </div>
 </section>
 
 {% if c.is_guest %}
 <section class="panel guest">
-  <h3>👥 Guest pet{% if c.guest_from %} from {{ c.guest_from }}{% endif %}</h3>
-  <p class="muted small">{% if c.share_id %}Received {{ c.guest_since|d }}. Your own copy: edits stay here, and a new share from the owner can update it.
-     {% else %}Staying since {{ c.guest_since|d }}.{% endif %}</p>
+  <h3>👥 {{ _("Guest pet from {name}", name=c.guest_from) if c.guest_from else _("Guest pet") }}</h3>
+  <p class="muted small">{% if c.share_id %}{{ _("Received {date}. Your own copy: edits stay here, and a new share from the owner can update it.", date=c.guest_since|d) }}
+     {% else %}{{ _("Staying since {date}.", date=c.guest_since|d) }}{% endif %}</p>
   {% set gcs = guest_contacts(c) %}
   {% if gcs %}
   <ul class="list">
@@ -54,27 +54,27 @@
 
 {% if c.special_needs or c.allergies %}
 <section class="panel callout">
-  {% if c.special_needs %}<h3>Special needs</h3><p class="pre">{{ c.special_needs }}</p>{% endif %}
-  {% if c.allergies %}<h3>Allergies / intolerances</h3><p class="pre">{{ c.allergies }}</p>{% endif %}
+  {% if c.special_needs %}<h3>{{ _("Special needs") }}</h3><p class="pre">{{ c.special_needs }}</p>{% endif %}
+  {% if c.allergies %}<h3>{{ _("Allergies / intolerances") }}</h3><p class="pre">{{ c.allergies }}</p>{% endif %}
 </section>
 {% endif %}
 
 <nav class="jump">
-  <a href="#due">Due</a><a href="#vaccine">Vaccines</a><a href="#treatment">Meds</a><a href="#weight">Weight</a>
-  <a href="#food">Food</a><a href="#visit">Vet visits</a><a href="#document">Documents</a><a href="#photo">Photos</a><a href="#log">Journal</a>
+  <a href="#due">{{ _("Due") }}</a><a href="#vaccine">{{ _("Vaccines") }}</a><a href="#treatment">{{ _("Meds") }}</a><a href="#weight">{{ _("Weight") }}</a>
+  <a href="#food">{{ _("Food") }}</a><a href="#visit">{{ _("Vet visits") }}</a><a href="#document">{{ _("Documents") }}</a><a href="#photo">{{ _("Photos") }}</a><a href="#log">{{ _("Journal") }}</a>
 </nav>
 
 <section class="panel" id="due">
-  <h2>Coming up</h2>
+  <h2>{{ _("Coming up") }}</h2>
   {% with items=due, show_cat=False, back='cat' %}{% include "_due.html" %}{% endwith %}
 </section>
 
 <div class="two">
 <section class="panel" id="vaccine">
-  <h2>Vaccinations</h2>
+  <h2>{{ _("Vaccinations") }}</h2>
   {% if vaccines %}
   <table>
-    <tr><th>Vaccine</th><th>Given</th><th>Next due</th><th></th></tr>
+    <tr><th>{{ _("Vaccine") }}</th><th>{{ _("Given") }}</th><th>{{ _("Next due") }}</th><th></th></tr>
     {% for v in vaccines %}{% set st = due_status(v.next_due) %}
     <tr><td>{{ v.name }}{% if v.vet or v.notes %}<div class="sub">{{ v.vet or '' }}{% if v.vet and v.notes %} · {% endif %}{{ v.notes or '' }}</div>{% endif %}</td>
         <td>{{ v.date_given|d }}</td>
@@ -82,117 +82,117 @@
         <td>{{ del('vaccine', v.id) }}</td></tr>
     {% endfor %}
   </table>
-  {% else %}<p class="muted">No vaccinations recorded.</p>{% endif %}
-  <details><summary>+ add vaccination</summary>
+  {% else %}<p class="muted">{{ _("No vaccinations recorded.") }}</p>{% endif %}
+  <details><summary>{{ _("+ add vaccination") }}</summary>
     <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='vaccine') }}" class="form">
       <div class="grid">
-        <label>Vaccine *<input name="name" list="vaxlist" required placeholder="{{ sp[3][0] if sp[3] else 'Vaccine name' }}"></label>
-        <label>Date given<input type="date" name="date_given" value="{{ today() }}"></label>
-        <label>Repeats
-          <select name="repeat_months"><option value="">— set date manually —</option>
-            <option value="12" selected>every year</option><option value="36">every 3 years</option>
-            <option value="1">in 1 month (booster)</option><option value="6">in 6 months</option></select></label>
-        <label>…or next due<input type="date" name="next_due"></label>
-        <label>Vet / clinic<input name="vet"></label>
-        <label>Notes<input name="notes" placeholder="batch #, reaction…"></label>
+        <label>{{ _("Vaccine *") }}<input name="name" list="vaxlist" required placeholder="{{ sp[3][0] if sp[3] else _('Vaccine name') }}"></label>
+        <label>{{ _("Date given") }}<input type="date" name="date_given" value="{{ today() }}"></label>
+        <label>{{ _("Repeats") }}
+          <select name="repeat_months"><option value="">{{ _("— set date manually —") }}</option>
+            <option value="12" selected>{{ _("every year") }}</option><option value="36">{{ _("every 3 years") }}</option>
+            <option value="1">{{ _("in 1 month (booster)") }}</option><option value="6">{{ _("in 6 months") }}</option></select></label>
+        <label>{{ _("…or next due") }}<input type="date" name="next_due"></label>
+        <label>{{ _("Vet / clinic") }}<input name="vet"></label>
+        <label>{{ _("Notes") }}<input name="notes" placeholder="{{ _("batch #, reaction…") }}"></label>
       </div>
       <datalist id="vaxlist">{% for v in sp[3] %}<option>{{ v }}</option>{% endfor %}</datalist>
-      <button class="btn">Add</button>
+      <button class="btn">{{ _("Add") }}</button>
     </form>
   </details>
 </section>
 
 <section class="panel" id="treatment">
-  <h2>Medications &amp; treatments</h2>
+  <h2>{{ _("Medications & treatments") }}</h2>
   {% if treatments %}
   <ul class="list">
     {% for t in treatments %}{% set st = due_status(t.next_due) %}
     <li class="{% if not t.active %}inactive{% endif %}">
       <div class="li-main">
-        <span class="tag">{{ (t.kind or 'other')|upper }}</span> <b>{{ t.name }}</b>{% if t.dose %} — {{ t.dose }}{% endif %}
+        <span class="tag">{{ kind_label(t.kind or 'other')|upper }}</span> <b>{{ t.name }}</b>{% if t.dose %} — {{ t.dose }}{% endif %}
         <div class="sub">
           {% if t.schedule %}{{ t.schedule }} · {% endif %}
-          {% if t.interval_days %}every {{ t.interval_days }} d · {% endif %}
-          last {{ t.last_given|d }}
-          {% if t.next_due and t.active %} · next <span class="{{ st[0] }}">{{ t.next_due|d }} ({{ st[1] }})</span>{% endif %}
-          {% if t.end_date %} · until {{ t.end_date|d }}{% endif %}
-          {% if not t.active %} · stopped{% endif %}
+          {% if t.interval_days %}{{ _n("every {n} days", t.interval_days) }} · {% endif %}
+          {{ _("last {date}", date=t.last_given|d) }}
+          {% if t.next_due and t.active %} · {{ _("next") }} <span class="{{ st[0] }}">{{ t.next_due|d }} ({{ st[1] }})</span>{% endif %}
+          {% if t.end_date %} · {{ _("until {date}", date=t.end_date|d) }}{% endif %}
+          {% if not t.active %} · {{ _("stopped") }}{% endif %}
         </div>
         {% if t.notes %}<div class="sub pre">{{ t.notes }}</div>{% endif %}
       </div>
       <div class="li-act">
         {% if t.active %}
-        <form method="post" action="{{ url_for('treatment_done', tid=t.id) }}" class="inline"><button class="btn tiny" title="Mark given today">✓ given</button></form>
+        <form method="post" action="{{ url_for('treatment_done', tid=t.id) }}" class="inline"><button class="btn tiny" title="{{ _("Mark given today") }}">{{ _("✓ given") }}</button></form>
         {% endif %}
-        <form method="post" action="{{ url_for('treatment_toggle', tid=t.id) }}" class="inline"><button class="btn tiny ghost">{{ 'stop' if t.active else 'resume' }}</button></form>
+        <form method="post" action="{{ url_for('treatment_toggle', tid=t.id) }}" class="inline"><button class="btn tiny ghost">{{ _('stop') if t.active else _('resume') }}</button></form>
         {{ del('treatment', t.id) }}
       </div>
     </li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">No medications or treatments.</p>{% endif %}
-  <details><summary>+ add medication / treatment</summary>
+  {% else %}<p class="muted">{{ _("No medications or treatments.") }}</p>{% endif %}
+  <details><summary>{{ _("+ add medication / treatment") }}</summary>
     <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='treatment') }}" class="form">
       <div class="grid">
-        <label>Type<select name="kind">
-          <option value="medication">medication</option><option value="flea/tick">flea / tick</option>
-          <option value="deworming">deworming</option><option value="supplement">supplement</option>
-          <option value="other">other</option></select></label>
-        <label>Name *<input name="name" required placeholder="Bravecto, Milbemax…"></label>
-        <label>Dose<input name="dose" placeholder="½ tablet"></label>
-        <label>Schedule (text)<input name="schedule" placeholder="twice daily with food"></label>
-        <label>Repeat every N days<input type="number" name="interval_days" min="1" placeholder="90"></label>
-        <label>Last given<input type="date" name="last_given" value="{{ today() }}"></label>
-        <label>…or next due<input type="date" name="next_due"></label>
-        <label>End date (course)<input type="date" name="end_date"></label>
+        <label>{{ _("Type") }}<select name="kind">
+          <option value="medication">{{ _("medication") }}</option><option value="flea/tick">{{ _("flea / tick") }}</option>
+          <option value="deworming">{{ _("deworming") }}</option><option value="supplement">{{ _("supplement") }}</option>
+          <option value="other">{{ _("other") }}</option></select></label>
+        <label>{{ _("Name *") }}<input name="name" required placeholder="{{ _("Bravecto, Milbemax…") }}"></label>
+        <label>{{ _("Dose") }}<input name="dose" placeholder="{{ _("½ tablet") }}"></label>
+        <label>{{ _("Schedule (text)") }}<input name="schedule" placeholder="{{ _("twice daily with food") }}"></label>
+        <label>{{ _("Repeat every N days") }}<input type="number" name="interval_days" min="1" placeholder="90"></label>
+        <label>{{ _("Last given") }}<input type="date" name="last_given" value="{{ today() }}"></label>
+        <label>{{ _("…or next due") }}<input type="date" name="next_due"></label>
+        <label>{{ _("End date (course)") }}<input type="date" name="end_date"></label>
       </div>
-      <label>Notes<textarea name="notes" rows="2" placeholder="how to give it, side effects to watch…"></textarea></label>
-      <button class="btn">Add</button>
+      <label>{{ _("Notes") }}<textarea name="notes" rows="2" placeholder="{{ _("how to give it, side effects to watch…") }}"></textarea></label>
+      <button class="btn">{{ _("Add") }}</button>
     </form>
   </details>
 </section>
 </div>
 
 <section class="panel" id="weight">
-  <h2>Weight</h2>
+  <h2>{{ _("Weight") }}</h2>
   {% if trend %}
   <p class="trend">
-    <b>{{ '%g'|format(trend.kg) }} kg</b>
-    {% if trend.delta is defined %}<span class="{{ 'down' if trend.delta < 0 else 'up' }}">{{ '%+g'|format(trend.delta) }} kg since last</span>{% endif %}
-    {% if trend.pct is defined %}<span class="{% if trend.warn %}overdue{% endif %}">{{ '%+.1f'|format(trend.pct) }}% since {{ trend.since|d }}</span>{% endif %}
+    <b>{{ _("{kg} kg", kg='%g'|format(trend.kg)) }}</b>
+    {% if trend.delta is defined %}<span class="{{ 'down' if trend.delta < 0 else 'up' }}">{{ _("{delta} kg since last", delta='%+g'|format(trend.delta)) }}</span>{% endif %}
+    {% if trend.pct is defined %}<span class="{% if trend.warn %}overdue{% endif %}">{{ _("{pct}% since {date}", pct='%+.1f'|format(trend.pct), date=trend.since|d) }}</span>{% endif %}
   </p>
-  {% if trend.warn %}<p class="flash">Down 10% or more in about six months. Worth mentioning to the vet.</p>{% endif %}
+  {% if trend.warn %}<p class="flash">{{ _("Down 10% or more in about six months. Worth mentioning to the vet.") }}</p>{% endif %}
   {% endif %}
-  {% if chart %}{{ chart }}{% elif weights %}<p class="muted small">Add another weigh-in to see the chart.</p>{% endif %}
+  {% if chart %}{{ chart }}{% elif weights %}<p class="muted small">{{ _("Add another weigh-in to see the chart.") }}</p>{% endif %}
   <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='weight') }}" class="form inline-form">
     <input type="date" name="date" value="{{ today() }}">
     <input name="kg" inputmode="decimal" placeholder="4.2" required size="6">
-    <select name="unit"><option>kg</option><option>lb</option></select>
-    <button class="btn">Log weight</button>
+    <select name="unit"><option>{{ _("kg") }}</option><option>{{ _("lb") }}</option></select>
+    <button class="btn">{{ _("Log weight") }}</button>
   </form>
   {% if weights %}
-  <details><summary>History ({{ weights|length }})</summary>
-    <table>{% for w in weights %}<tr><td>{{ w.date|d }}</td><td>{{ '%g'|format(w.kg) }} kg</td><td>{{ del('weight', w.id) }}</td></tr>{% endfor %}</table>
+  <details><summary>{{ _("History ({n})", n=weights|length) }}</summary>
+    <table>{% for w in weights %}<tr><td>{{ w.date|d }}</td><td>{{ _("{kg} kg", kg='%g'|format(w.kg)) }}</td><td>{{ del('weight', w.id) }}</td></tr>{% endfor %}</table>
   </details>
   {% endif %}
 </section>
 
 <section class="panel" id="food">
-  <div class="row-head"><h2>Food</h2><a class="btn tiny ghost" href="{{ url_for('cat_form', cid=c.id) }}">edit</a></div>
+  <div class="row-head"><h2>{{ _("Food") }}</h2><a class="btn tiny ghost" href="{{ url_for('cat_form', cid=c.id) }}">{{ _("edit") }}</a></div>
   {% if c.food_brand or c.food_portion or c.food_schedule or c.food_notes %}
   <dl class="facts">
-    <div><dt>Food</dt><dd>{{ c.food_brand or '—' }}</dd></div>
-    <div><dt>Portion</dt><dd>{{ c.food_portion or '—' }}</dd></div>
-    <div><dt>Schedule</dt><dd>{{ c.food_schedule or '—' }}</dd></div>
+    <div><dt>{{ _("Food") }}</dt><dd>{{ c.food_brand or '—' }}</dd></div>
+    <div><dt>{{ _("Portion") }}</dt><dd>{{ c.food_portion or '—' }}</dd></div>
+    <div><dt>{{ _("Schedule") }}</dt><dd>{{ c.food_schedule or '—' }}</dd></div>
   </dl>
   {% if c.food_notes %}<p class="pre">{{ c.food_notes }}</p>{% endif %}
-  {% else %}<p class="muted">No food details yet.</p>{% endif %}
-  {% if c.notes %}<h3>Notes</h3><p class="pre">{{ c.notes }}</p>{% endif %}
+  {% else %}<p class="muted">{{ _("No food details yet.") }}</p>{% endif %}
+  {% if c.notes %}<h3>{{ _("Notes") }}</h3><p class="pre">{{ c.notes }}</p>{% endif %}
 </section>
 
 <div class="two">
 <section class="panel" id="visit">
-  <h2>Vet visits</h2>
+  <h2>{{ _("Vet visits") }}</h2>
   {% if visits %}
   <ul class="list">
     {% for v in visits %}
@@ -203,24 +203,24 @@
       <div class="li-act">{{ del('visit', v.id) }}</div></li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">No visits logged.</p>{% endif %}
-  <details><summary>+ log a visit</summary>
+  {% else %}<p class="muted">{{ _("No visits logged.") }}</p>{% endif %}
+  <details><summary>{{ _("+ log a visit") }}</summary>
     <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='visit') }}" class="form">
       <div class="grid">
-        <label>Date<input type="date" name="date" value="{{ today() }}"></label>
-        <label>Clinic / vet<input name="clinic"></label>
-        <label>Cost<input name="cost" placeholder="₪350"></label>
+        <label>{{ _("Date") }}<input type="date" name="date" value="{{ today() }}"></label>
+        <label>{{ _("Clinic / vet") }}<input name="clinic"></label>
+        <label>{{ _("Cost") }}<input name="cost" placeholder="₪350"></label>
       </div>
-      <label>Reason<input name="reason" placeholder="annual check-up"></label>
-      <label>Outcome / diagnosis<textarea name="outcome" rows="2"></textarea></label>
-      <label>Notes<textarea name="notes" rows="2"></textarea></label>
-      <button class="btn">Add</button>
+      <label>{{ _("Reason") }}<input name="reason" placeholder="{{ _("annual check-up") }}"></label>
+      <label>{{ _("Outcome / diagnosis") }}<textarea name="outcome" rows="2"></textarea></label>
+      <label>{{ _("Notes") }}<textarea name="notes" rows="2"></textarea></label>
+      <button class="btn">{{ _("Add") }}</button>
     </form>
   </details>
 </section>
 
 <section class="panel" id="document">
-  <h2>Documents</h2>
+  <h2>{{ _("Documents") }}</h2>
   {% if documents %}
   <ul class="list">
     {% for d in documents %}
@@ -229,19 +229,19 @@
       <div class="li-act"><a class="btn tiny ghost" href="{{ url_for('document', did=d.id, dl=1) }}">↓</a>{{ del('document', d.id) }}</div></li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">Lab results, vaccination certificates, insurance papers…</p>{% endif %}
+  {% else %}<p class="muted">{{ _("Lab results, vaccination certificates, insurance papers…") }}</p>{% endif %}
   <form method="post" action="{{ url_for('add_document', cid=c.id) }}" enctype="multipart/form-data" class="form">
     <div class="grid">
-      <label>Title<input name="title" placeholder="Bloodwork Nov 2026"></label>
-      <label>File<input type="file" name="file" required></label>
+      <label>{{ _("Title") }}<input name="title" placeholder="{{ _("Bloodwork Nov 2026") }}"></label>
+      <label>{{ _("File") }}<input type="file" name="file" required></label>
     </div>
-    <button class="btn">Upload</button>
+    <button class="btn">{{ _("Upload") }}</button>
   </form>
 </section>
 </div>
 
 <section class="panel" id="photo">
-  <h2>Photos</h2>
+  <h2>{{ _("Photos") }}</h2>
   {% if photos %}
   <div class="gallery">
     {% for p in photos %}
@@ -250,7 +250,7 @@
       <figcaption>{{ p.caption or '' }}{% if p.taken_on %} <span class="sub">{{ p.taken_on|d }}</span>{% endif %}
         <span class="ph-act">
         {% if not (profile and p.id == profile.id) %}
-        <form method="post" action="{{ url_for('photo_profile', pid=p.id) }}" class="inline"><button class="btn tiny ghost" title="Use as profile photo">★</button></form>
+        <form method="post" action="{{ url_for('photo_profile', pid=p.id) }}" class="inline"><button class="btn tiny ghost" title="{{ _("Use as profile photo") }}">★</button></form>
         {% endif %}{{ del('photo', p.id) }}</span>
       </figcaption>
     </figure>
@@ -259,30 +259,30 @@
   {% endif %}
   <form method="post" action="{{ url_for('add_photos', cid=c.id) }}" enctype="multipart/form-data" class="form">
     <div class="grid">
-      <label>Photos<input type="file" name="photos" accept="image/*" multiple required></label>
-      <label>Caption (optional)<input name="caption"></label>
-      <label>Taken on<input type="date" name="taken_on"></label>
+      <label>{{ _("Photos") }}<input type="file" name="photos" accept="image/*" multiple required></label>
+      <label>{{ _("Caption (optional)") }}<input name="caption"></label>
+      <label>{{ _("Taken on") }}<input type="date" name="taken_on"></label>
     </div>
-    <button class="btn">Upload</button>
+    <button class="btn">{{ _("Upload") }}</button>
   </form>
 </section>
 
 <section class="panel" id="log">
-  <h2>Journal</h2>
+  <h2>{{ _("Journal") }}</h2>
   <form method="post" action="{{ url_for('add_sub', cid=c.id, kind='log') }}" class="form">
     <div class="grid">
-      <label>Date<input type="date" name="date" value="{{ today() }}"></label>
-      <label>Kind<select name="kind">
-        {% for k in ['note','grooming','nails','litter','behaviour','appetite','food trial','symptom'] %}<option>{{ k }}</option>{% endfor %}
+      <label>{{ _("Date") }}<input type="date" name="date" value="{{ today() }}"></label>
+      <label>{{ _("Kind") }}<select name="kind">
+        {% for k in ['note','grooming','nails','litter','behaviour','appetite','food trial','symptom'] %}<option value="{{ k }}">{{ _(k) }}</option>{% endfor %}
       </select></label>
     </div>
-    <label><textarea name="text" rows="2" required placeholder="Threw up a hairball, otherwise fine…"></textarea></label>
-    <button class="btn">Add entry</button>
+    <label><textarea name="text" rows="2" required placeholder="{{ _("Threw up a hairball, otherwise fine…") }}"></textarea></label>
+    <button class="btn">{{ _("Add entry") }}</button>
   </form>
   {% if logs %}
   <ul class="list">
     {% for l in logs %}
-    <li><div class="li-main"><span class="tag">{{ (l.kind or 'note')|upper }}</span> <b>{{ l.date|d }}</b><div class="pre">{{ l.text }}</div></div>
+    <li><div class="li-main"><span class="tag">{{ _(l.kind or 'note')|upper }}</span> <b>{{ l.date|d }}</b><div class="pre">{{ l.text }}</div></div>
       <div class="li-act">{{ del('log', l.id) }}</div></li>
     {% endfor %}
   </ul>
@@ -290,28 +290,28 @@
 </section>
 
 <section class="panel" id="share">
-  <h2>Share {{ c.name }}</h2>
+  <h2>{{ _("Share {name}", name=c.name) }}</h2>
   <form id="shareform" class="form" onsubmit="return false">
     <div class="grid">
-      <label>Your name<input name="sender" value="{{ request.cookies.get('sender', '') }}" placeholder="shown to the person you share with"></label>
-      <label>Photos
-        <select name="photos"><option value="none">None</option><option value="profile" selected>Profile photo</option><option value="all">All photos</option></select></label>
+      <label>{{ _("Your name") }}<input name="sender" value="{{ request.cookies.get('sender', '') }}" placeholder="{{ _("shown to the person you share with") }}"></label>
+      <label>{{ _("Photos") }}
+        <select name="photos"><option value="none">{{ _("None") }}</option><option value="profile" selected>{{ _("Profile photo") }}</option><option value="all">{{ _("All photos") }}</option></select></label>
     </div>
     <div class="checks">
       {% for key, label, on in [('details','Breed, markings, microchip',1),('special','Special needs & allergies',1),('food','Food',1),
                                 ('health','Vaccinations & medications',1),('weight','Weight history',1),('visits','Vet visits',0),
                                 ('documents','Documents',0),('journal','Journal',0),('notes','Notes',1),('contacts','Contacts',1)] %}
-      <label class="check"><input type="checkbox" name="{{ key }}" value="1" {% if on %}checked{% endif %}> {{ label }}</label>
+      <label class="check"><input type="checkbox" name="{{ key }}" value="1" {% if on %}checked{% endif %}> {{ _(label) }}</label>
       {% endfor %}
     </div>
     <div class="actions">
-      <button type="button" class="btn" id="share_native" hidden>Share…</button>
-      <button type="button" class="btn ghost" id="share_copy">Copy text</button>
-      <a class="btn ghost" id="share_file" href="#" download>Download .petobase</a>
+      <button type="button" class="btn" id="share_native" hidden>{{ _("Share…") }}</button>
+      <button type="button" class="btn ghost" id="share_copy">{{ _("Copy text") }}</button>
+      <a class="btn ghost" id="share_file" href="#" download>{{ _("Download .petobase") }}</a>
     </div>
   </form>
   <pre class="summary" id="share_text">…</pre>
-  <p class="muted small">The text is for anyone. The <code>.petobase</code> file opens in Pet-o-Base on iPhone and Mac, or in this web app (Backup → Import a shared pet), and adds {{ c.name }} as a guest pet.</p>
+  <p class="muted small">{{ _("The text is for anyone. The .petobase file opens in Pet-o-Base on iPhone and Mac, or in this web app (Backup → Import a shared pet), and adds {name} as a guest pet.", name=c.name) }}</p>
 </section>
 <script>
 (() => {
@@ -335,9 +335,9 @@
   form.addEventListener('change', refresh);
   form.sender.addEventListener('input', () => { clearTimeout(form._t); form._t = setTimeout(refresh, 300); });
   document.getElementById('share_copy').addEventListener('click', async e => {
-    try { await navigator.clipboard.writeText(out.textContent); e.target.textContent = 'Copied ✓'; }
-    catch { e.target.textContent = 'Select the text below'; }
-    setTimeout(() => e.target.textContent = 'Copy text', 1800);
+    try { await navigator.clipboard.writeText(out.textContent); e.target.textContent = {{ _("Copied ✓")|tojson }}; }
+    catch { e.target.textContent = {{ _("Select the text below")|tojson }}; }
+    setTimeout(() => e.target.textContent = {{ _("Copy text")|tojson }}, 1800);
   });
   // Phone browsers can share the file and text straight to Messages, Telegram, WhatsApp…
   const native = document.getElementById('share_native');

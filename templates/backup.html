@@ -1,37 +1,37 @@
 {% extends "base.html" %}
-{% block title %}Backup{% endblock %}
+{% block title %}{{ _("Backup") }}{% endblock %}
 {% block body %}
 <section class="panel">
-  <h2>Backup</h2>
-  <p class="muted small">Data directory: <code>{{ data_dir }}</code> · media {{ '%.1f'|format(media_mb) }} MB ·
+  <h2>{{ _("Backup") }}</h2>
+  <p class="muted small">{{ _("Data directory:") }} <code>{{ data_dir }}</code> · {{ _("media {mb} MB", mb='%.1f'|format(media_mb)) }} ·
     {% for t, n in counts.items() %}{{ t }} {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
   <div class="actions">
-    <a class="btn" href="{{ url_for('backup_zip') }}">↓ Full backup (.zip, with photos)</a>
-    <a class="btn ghost" href="{{ url_for('export_json') }}">↓ Data only (.json)</a>
+    <a class="btn" href="{{ url_for('backup_zip') }}">{{ _("↓ Full backup (.zip, with photos)") }}</a>
+    <a class="btn ghost" href="{{ url_for('export_json') }}">{{ _("↓ Data only (.json)") }}</a>
   </div>
 </section>
 
 <section class="panel">
-  <h2>Import a shared pet</h2>
-  <p class="muted small">A <code>.petobase</code> file sent from Pet-o-Base on iPhone or Mac, or downloaded from another copy of this web app. The pet is added under Guest Pets.</p>
+  <h2>{{ _("Import a shared pet") }}</h2>
+  <p class="muted small">{{ _("A .petobase file sent from Pet-o-Base on iPhone or Mac, or downloaded from another copy of this web app. The pet is added under Guest Pets.") }}</p>
   <form method="post" action="{{ url_for('import_pet') }}" enctype="multipart/form-data" class="form">
     <div class="grid">
-      <label>File<input type="file" name="file" accept=".petobase,.catobase,application/json" required></label>
-      <label class="check"><input type="checkbox" name="replace" value="1" checked> If I already have this pet from the same person, replace my copy</label>
+      <label>{{ _("File") }}<input type="file" name="file" accept=".petobase,.catobase,application/json" required></label>
+      <label class="check"><input type="checkbox" name="replace" value="1" checked> {{ _("If I already have this pet from the same person, replace my copy") }}</label>
     </div>
-    <button class="btn">Import</button>
+    <button class="btn">{{ _("Import") }}</button>
   </form>
 </section>
 
 <section class="panel danger">
-  <h2>Restore</h2>
-  <p>Replaces <b>everything</b> in this instance with the contents of a full-backup .zip.</p>
+  <h2>{{ _("Restore") }}</h2>
+  <p>{{ _("Replaces everything in this instance with the contents of a full-backup .zip.") }}</p>
   <form method="post" action="{{ url_for('restore') }}" enctype="multipart/form-data" class="form">
     <div class="grid">
-      <label>Backup .zip<input type="file" name="file" accept=".zip" required></label>
-      <label>Type RESTORE<input name="confirm" autocomplete="off"></label>
+      <label>{{ _("Backup .zip") }}<input type="file" name="file" accept=".zip" required></label>
+      <label>{{ _("Type RESTORE") }}<input name="confirm" autocomplete="off"></label>
     </div>
-    <button class="btn red">Restore</button>
+    <button class="btn red">{{ _("Restore") }}</button>
   </form>
 </section>
 {% endblock %}

@@ -192,3 +192,9 @@ h3.group{margin:1.5rem 0 .75rem;font-size:1.05rem}
 .checks label.check{margin:.3rem 0}
 pre.summary{white-space:pre-wrap;font:14px/1.5 var(--font);background:var(--line2);border-radius:8px;padding:.9rem 1rem;margin:.75rem 0}
 .gc{margin-bottom:.25rem}
+
+/* language switch */
+.langs{margin-left:auto;display:flex;gap:.15rem}
+.langs a{font-size:.78rem;font-weight:600;padding:.2rem .45rem;border-radius:6px;color:var(--mut)}
+.langs a:hover{background:var(--line2);text-decoration:none}
+.langs a.on{background:var(--accent-bg);color:var(--accent)}

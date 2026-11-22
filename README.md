@@ -72,6 +72,12 @@ you expose it to the internet, put it behind a reverse proxy with
 authentication (for example an Nginx Proxy Manager access list, Authelia or
 Cloudflare Access).
 
+## Languages
+
+The web app is available in English, Russian and Ukrainian. It follows the browser's language, and the EN / RU / UK switch in the top-right corner overrides it (remembered in a cookie).
+
+Translations live in `translations.py`, one row per string: English, Russian, Ukrainian. To fix a wording, edit the row and restart the service (`systemctl restart cat-o-base`), or just rerun the installer after `git pull`. A string missing from the table is shown in English.
+
 ## Configuration
 
 Set these as environment variables in the systemd unit
@@ -101,6 +107,8 @@ on the device, with iCloud sync planned. See [apple/README.md](apple/README.md).
 ```
 apple/              native SwiftUI app (iPhone, iPad, Mac)
 app.py              the whole backend (routes, DB schema, calendar, backup)
+i18n.py             language detection, dates and plurals
+translations.py     Russian and Ukrainian strings
 templates/          Jinja templates
 static/             CSS, JS, icon
 install.sh          installer and updater for Debian/Ubuntu

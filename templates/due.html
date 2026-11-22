@@ -1,11 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Due{% endblock %}
+{% block title %}{{ _("Due") }}{% endblock %}
 {% block body %}
 <section class="panel">
-  <div class="row-head"><h2>Everything scheduled</h2>
-    <a class="btn ghost" href="{{ url_for('calendar_ics') }}">📅 calendar feed</a></div>
+  <div class="row-head"><h2>{{ _("Everything scheduled") }}</h2>
+    <a class="btn ghost" href="{{ url_for('calendar_ics') }}">{{ _("📅 calendar feed") }}</a></div>
   {% with items=due, show_cat=True, back='index' %}{% include "_due.html" %}{% endwith %}
-  <p class="muted small">Subscribe to <code>{{ url_for('calendar_ics', _external=True) }}</code> in Apple/Google Calendar
-  to get vaccine and medication dates, birthdays and gotcha days, with a 9:00 reminder on due days.</p>
+  <p class="muted small">{{ _("Subscribe to {url} in Apple/Google Calendar to get vaccine and medication dates, birthdays and gotcha days, with a 9:00 reminder on due days.", url=url_for('calendar_ics', _external=True)) }}</p>
 </section>
 {% endblock %}

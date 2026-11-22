@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Pets{% endblock %} · Pet-o-Base</title>
+<title>{% block title %}{{ _("Pets") }}{% endblock %} · Pet-o-Base</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
@@ -13,12 +13,18 @@
 <header class="top">
   <a href="{{ url_for('index') }}" class="logo"><img src="{{ url_for('static', filename='icon.svg') }}" alt="">Pet-o-Base</a>
   <nav>
-    <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="on"{% endif %}>Pets</a>
-    <a href="{{ url_for('due_page') }}" {% if request.endpoint=='due_page' %}class="on"{% endif %}>Due</a>
-    <a href="{{ url_for('contacts') }}" {% if request.endpoint=='contacts' %}class="on"{% endif %}>Contacts</a>
-    <a href="{{ url_for('sitter') }}">Sitter sheet</a>
-    <a href="{{ url_for('backup_page') }}" {% if request.endpoint=='backup_page' %}class="on"{% endif %}>Backup</a>
+    <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="on"{% endif %}>{{ _("Pets") }}</a>
+    <a href="{{ url_for('due_page') }}" {% if request.endpoint=='due_page' %}class="on"{% endif %}>{{ _("Due") }}</a>
+    <a href="{{ url_for('contacts') }}" {% if request.endpoint=='contacts' %}class="on"{% endif %}>{{ _("Contacts") }}</a>
+    <a href="{{ url_for('sitter') }}">{{ _("Sitter sheet") }}</a>
+    <a href="{{ url_for('backup_page') }}" {% if request.endpoint=='backup_page' %}class="on"{% endif %}>{{ _("Backup") }}</a>
   </nav>
+  <div class="langs" aria-label="{{ _('Language') }}">
+    {% for code, name in LANGUAGES.items() %}
+    <a href="{{ url_for('set_language', code=code, next=request.full_path) }}" title="{{ name }}"
+       {% if code == lang %}class="on" aria-current="true"{% endif %}>{{ code|upper }}</a>
+    {% endfor %}
+  </div>
 </header>
 <main>
   {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}

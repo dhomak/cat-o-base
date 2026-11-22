@@ -22,6 +22,8 @@ from markupsafe import Markup, escape
 from PIL import Image, ImageOps
 from werkzeug.utils import secure_filename
 
+from i18n import LANGUAGES, detect_language, format_age, format_date, gettext as _, ngettext as _n
+
 try:  # optional: iPhone HEIC uploads
     from pillow_heif import register_heif_opener
     register_heif_opener()
@@ -52,6 +54,40 @@ def _secret():
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("CATOBASE_MAX_UPLOAD_MB") or os.environ.get("CATDB_MAX_UPLOAD_MB") or "200") * 1024 * 1024
 app.secret_key = os.environ.get("CATOBASE_SECRET") or _secret()
+
+
+@app.before_request
+def _choose_language():
+    g.lang = detect_language()
+
+
+@app.route("/lang/<code>")
+def set_language(code):
+    target = request.args.get("next") or url_for("index")
+    if not target.startswith("/"):
+        target = url_for("index")
+    resp = redirect(target)
+    if code in LANGUAGES:
+        resp.set_cookie("lang", code, max_age=3600 * 24 * 365)
+    return resp
+
+
+def sex_label(sex):
+    return {"female": _("female"), "male": _("male")}.get(sex or "", sex or "")
+
+
+def kind_label(kind):
+    return {"medication": _("medication"), "flea/tick": _("flea / tick"), "deworming": _("deworming"),
+            "supplement": _("supplement"), "other": _("other")}.get(kind or "other", kind)
+
+
+app.jinja_env.globals.update(_=_, _n=_n, LANGUAGES=LANGUAGES, sex_label=sex_label, kind_label=kind_label,
+                             lang="en")
+
+
+@app.context_processor
+def _language_context():
+    return {"lang": g.get("lang", "en")}
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS cats(
@@ -176,14 +212,14 @@ def age_filter(b):
         return "—"
     y, m = divmod(months, 12)
     if y == 0:
-        return f"{m} mo"
-    return f"{y} y {m} mo" if m else f"{y} y"
+        return format_age(0, m)
+    return format_age(y, m)
 
 
 @app.template_filter("d")
 def date_filter(s):
     d = pdate(s)
-    return d.strftime("%d %b %Y") if d else (s or "—")
+    return format_date(d) if d else (s or "—")
 
 
 def due_status(s):
@@ -192,12 +228,12 @@ def due_status(s):
         return ("none", "")
     n = (d - today()).days
     if n < 0:
-        return ("overdue", f"{-n} d overdue")
+        return ("overdue", _("{n} d overdue", n=-n))
     if n == 0:
-        return ("soon", "today")
+        return ("soon", _("today"))
     if n <= 14:
-        return ("soon", f"in {n} d")
-    return ("ok", f"in {n} d")
+        return ("soon", _("in {n} d", n=n))
+    return ("ok", _("in {n} d", n=n))
 
 
 app.jinja_env.globals.update(due_status=due_status, today=lambda: today().isoformat())
@@ -302,7 +338,7 @@ def weight_chart(ws):
     parts.append(f'<polyline points="{poly}" class="line"/>')
     for d, k in pts:
         parts.append(f'<circle cx="{X(d):.1f}" cy="{Y(k):.1f}" r="3.5" class="pt">'
-                     f'<title>{d.strftime("%d %b %Y")}: {k:g} kg</title></circle>')
+                     f'<title>{format_date(d)}: ' + _("{kg} kg", kg=f"{k:g}") + '</title></circle>')
     parts.append(f'<text x="{PL}" y="{H-8}" class="lbl">{d0.strftime("%b %Y")}</text>'
                  f'<text x="{W-PR}" y="{H-8}" class="lbl" text-anchor="end">{d1.strftime("%b %Y")}</text>')
     parts.append("</svg>")
@@ -422,7 +458,7 @@ def index():
     if search:
         cats = [c for c in cats if any(search in (v or "").lower() for v in (
             c["name"], c["breed"], c["markings"], c["guest_from"], c["microchip"],
-            SPECIES[species_of(c)][0]))]
+            SPECIES[species_of(c)][0], _(SPECIES[species_of(c)][0])))]
     cats = sort_cats(cats, sort)
     resp = make_response(render_template(
         "index.html", mine=[c for c in cats if not c["is_guest"]], guests=[c for c in cats if c["is_guest"]],
@@ -444,7 +480,7 @@ def cat_form(cid=None):
     if request.method == "POST":
         v = form_vals(CAT_FIELDS)
         if not v["name"]:
-            flash("A pet needs a name.")
+            flash(_("A pet needs a name."))
             return render_template("cat_form.html", cat=request.form, cid=cid)
         for b in CAT_BOOLS:
             v[b] = 1 if request.form.get(b) else 0
@@ -493,10 +529,10 @@ def cat(cid):
 def cat_delete(cid):
     c = get_cat(cid)
     if request.form.get("confirm", "").strip() != c["name"]:
-        flash("Type the pet's name exactly to delete the whole record.")
+        flash(_("Type the pet's name exactly to delete the whole record."))
         return redirect(url_for("cat_form", cid=cid))
     _delete_pet(cid)
-    flash(f"{c['name']} deleted.")
+    flash(_("{name} deleted.", name=c["name"]))
     return redirect(url_for("index"))
 
 
@@ -522,7 +558,7 @@ def add_sub(cid, kind):
     back = url_for("cat", cid=cid) + "#" + kind
     req = REQUIRED.get(kind)
     if req and not v[req]:
-        flash(f"{req.replace('_', ' ').capitalize()} is required.")
+        flash(_("{field} is required.", field=_(req.replace('_', ' ').capitalize())))
         return redirect(back)
     if "date" in v and not v["date"]:
         v["date"] = today().isoformat()
@@ -533,7 +569,7 @@ def add_sub(cid, kind):
                 kg = round(kg * 0.45359237, 2)
             v["kg"] = kg
         except ValueError:
-            flash("Weight must be a number.")
+            flash(_("Weight must be a number."))
             return redirect(back)
     if kind == "vaccine":
         rep = request.form.get("repeat_months")
@@ -582,7 +618,7 @@ def add_photos(cid):
             continue
         name = save_image(f)
         if not name:
-            flash(f"Couldn't read {f.filename} as an image.")
+            flash(_("Couldn't read {file} as an image.", file=f.filename))
             continue
         pid = x("INSERT INTO photos(cat_id, filename, caption, taken_on) VALUES(?,?,?,?)",
                 (cid, name, caption, taken))
@@ -590,7 +626,7 @@ def add_photos(cid):
             x("UPDATE cats SET profile_photo_id=? WHERE id=?", (pid, cid))
         n += 1
     if n:
-        flash(f"{n} photo{'s' if n > 1 else ''} added.")
+        flash(_n("{n} photos added", n))
     return redirect(url_for("cat", cid=cid) + "#photo")
 
 
@@ -606,7 +642,7 @@ def add_document(cid):
     get_cat(cid)
     f = request.files.get("file")
     if not f or not f.filename:
-        flash("Choose a file to upload.")
+        flash(_("Choose a file to upload."))
         return redirect(url_for("cat", cid=cid) + "#document")
     ext = os.path.splitext(secure_filename(f.filename))[1].lower()[:10]
     name = "d_" + uuid.uuid4().hex + ext
@@ -647,7 +683,7 @@ def contacts():
     if request.method == "POST":
         v = form_vals(["role", "name", "phone", "address", "notes"])
         if not v["name"]:
-            flash("Name is required.")
+            flash(_("Name is required."))
         else:
             x("INSERT INTO contacts(role, name, phone, address, notes) VALUES(?,?,?,?,?)", tuple(v.values()))
         return redirect(url_for("contacts"))
@@ -709,10 +745,10 @@ def calendar_ics():
     for c in q("SELECT * FROM cats WHERE archived=0"):
         b = pdate(c["birthday"])
         if b and not c["birthday_approx"]:
-            event(f"bday-{c['id']}@cat-o-base", b, f"{c['name']}'s birthday", rrule="FREQ=YEARLY")
+            event(f"bday-{c['id']}@cat-o-base", b, _("{name}'s birthday", name=c["name"]), rrule="FREQ=YEARLY")
         a = pdate(c["adoption_date"])
         if a:
-            event(f"gotcha-{c['id']}@cat-o-base", a, f"{c['name']} — gotcha day", rrule="FREQ=YEARLY")
+            event(f"gotcha-{c['id']}@cat-o-base", a, _("{name} — gotcha day", name=c["name"]), rrule="FREQ=YEARLY")
     L.append("END:VCALENDAR")
     return Response("\r\n".join(L) + "\r\n", mimetype="text/calendar",
                     headers={"Content-Disposition": "inline; filename=pets.ics"})
@@ -767,11 +803,11 @@ def backup_zip():
 @app.post("/restore")
 def restore():
     if request.form.get("confirm") != "RESTORE":
-        flash("Type RESTORE to confirm — this replaces everything.")
+        flash(_("Type RESTORE to confirm — this replaces everything."))
         return redirect(url_for("backup_page"))
     f = request.files.get("file")
     if not f or not f.filename:
-        flash("Choose a backup .zip first.")
+        flash(_("Choose a backup .zip first."))
         return redirect(url_for("backup_page"))
     tmp = tempfile.mkdtemp(dir=DATA, prefix=".restore-")
     try:
@@ -779,7 +815,7 @@ def restore():
             names = z.namelist()
             db_name = next((n for n in (DB_NAME, *LEGACY_DB_NAMES) if n in names), None)
             if not db_name:
-                raise ValueError(f"not a Pet-o-Base backup (no {DB_NAME} inside)")
+                raise ValueError(_("not a Pet-o-Base backup (no {file} inside)", file=DB_NAME))
             for n in names:
                 base = n[6:] if n.startswith("media/") else None
                 if n == db_name or (base and "/" not in base and not base.startswith(".")
@@ -790,7 +826,7 @@ def restore():
         con.close()
     except Exception as e:  # noqa: BLE001
         shutil.rmtree(tmp, ignore_errors=True)
-        flash(f"Restore failed: {e}")
+        flash(_("Restore failed: {error}", error=e))
         return redirect(url_for("backup_page"))
     _close_db(None)
     shutil.rmtree(MEDIA, ignore_errors=True)
@@ -802,7 +838,7 @@ def restore():
     os.replace(os.path.join(tmp, db_name), DB_PATH)
     shutil.rmtree(tmp, ignore_errors=True)
     init_db()
-    flash("Backup restored.")
+    flash(_("Backup restored."))
     return redirect(url_for("index"))
 
 
@@ -980,61 +1016,61 @@ def build_share(c, opts, sender):
 
 
 def share_summary(c, opts, sender):
-    """Readable message for people without the app."""
-    label, emoji, _, _ = SPECIES[species_of(c)]
+    """Readable message for people without the app, in the viewer's language."""
+    label, emoji, _hint, _vaccines = SPECIES[species_of(c)]
     lines = [f"{emoji} {c['name']}"]
-    facts = [label.lower()]
+    facts = [_(label).lower()]
     age = age_filter(c["birthday"])
     if age != "—":
-        facts.append(f"about {age}" if c["birthday_approx"] else age)
+        facts.append(_("about {age}", age=age) if c["birthday_approx"] else age)
     if c["sex"] in ("female", "male"):
-        facts.append(c["sex"] + (", neutered" if c["neutered"] else ""))
+        facts.append(sex_label(c["sex"]) + (", " + _("neutered") if c["neutered"] else ""))
     if opts["details"]:
         facts += [v for v in (c["breed"], c["markings"]) if v]
     lines.append(" · ".join(facts))
     if opts["details"] and c["microchip"]:
-        lines.append(f"Microchip: {c['microchip']}")
+        lines.append(_("Microchip: {chip}", chip=c["microchip"]))
     if opts["special"]:
         if c["special_needs"]:
-            lines.append(f"\n⚠️ Special needs: {c['special_needs']}")
+            lines.append("\n⚠️ " + _("Special needs: {text}", text=c["special_needs"]))
         if c["allergies"]:
-            lines.append(f"Allergies: {c['allergies']}")
+            lines.append(_("Allergies: {text}", text=c["allergies"]))
     if opts["food"]:
         food = [v for v in (c["food_brand"], c["food_portion"], c["food_schedule"]) if v]
         if food or c["food_notes"]:
-            lines.append("\n🍽 Food: " + ", ".join(food))
+            lines.append("\n🍽 " + _("Food: {text}", text=", ".join(food)))
             if c["food_notes"]:
                 lines.append(c["food_notes"])
     if opts["health"]:
         meds = q("SELECT * FROM treatments WHERE cat_id=? AND active=1 ORDER BY name", (c["id"],))
         if meds:
-            lines.append("\n💊 Medication & treatments:")
+            lines.append("\n💊 " + _("Medication & treatments:"))
             for t in meds:
                 extra = ", ".join(v for v in (t["dose"], t["schedule"],
-                                              f"every {t['interval_days']} days" if t["interval_days"] else None) if v)
+                                              _n("every {n} days", t["interval_days"]) if t["interval_days"] else None) if v)
                 line = f"• {t['name']}" + (f" ({extra})" if extra else "")
                 if t["next_due"]:
-                    line += f", next {date_filter(t['next_due'])}"
+                    line += ", " + _("next {date}", date=date_filter(t["next_due"]))
                 lines.append(line)
         vaccines = [d for d in due_items(c["id"]) if d["kind"] == "vaccine"]
         if vaccines:
-            lines.append("\n💉 Vaccinations:")
-            lines += [f"• {d['item']}, next due {date_filter(d['due'])}" for d in vaccines]
+            lines.append("\n💉 " + _("Vaccinations:"))
+            lines += ["• " + _("{name}, next due {date}", name=d["item"], date=date_filter(d["due"])) for d in vaccines]
     if opts["weight"]:
         w = q("SELECT * FROM weights WHERE cat_id=? ORDER BY date DESC, id DESC LIMIT 1", (c["id"],), one=True)
         if w:
-            lines.append(f"\n⚖️ Weight: {w['kg']:g} kg ({date_filter(w['date'])})")
+            lines.append("\n⚖️ " + _("Weight: {kg} kg ({date})", kg=f"{w['kg']:g}", date=date_filter(w["date"])))
     if opts["notes"] and c["notes"]:
         lines.append(f"\n📝 {c['notes']}")
     if opts["contacts"]:
         contacts = pet_contacts_for_share(c)
         if contacts:
-            lines.append("\n📞 Contacts:")
+            lines.append("\n📞 " + _("Contacts:"))
             for k in contacts:
                 role = f"{k['role']}: " if k.get("role") else ""
                 phone = f", {k['phone']}" if k.get("phone") else ""
                 lines.append(f"{role}{k['name']}{phone}")
-    lines.append("\n— Shared from Pet-o-Base" + (f" by {sender}" if sender else ""))
+    lines.append("\n— " + (_("Shared from Pet-o-Base by {name}", name=sender) if sender else _("Shared from Pet-o-Base")))
     return "\n".join(lines)
 
 
@@ -1071,7 +1107,7 @@ def import_share(raw, replace):
     import base64
     obj = json.loads(raw)
     if obj.get("format") != SHARE_FORMAT or obj.get("kind") != SHARE_KIND or not obj.get("cats"):
-        raise ValueError("this isn't a shared pet file")
+        raise ValueError(_("this isn't a shared pet file"))
     pet = obj["cats"][0]
     share_id = pet.get("shareID")
     if share_id and replace:
@@ -1152,20 +1188,20 @@ def _delete_pet(cid):
 def import_pet():
     f = request.files.get("file")
     if not f or not f.filename:
-        flash("Choose a .petobase file first.")
+        flash(_("Choose a .petobase file first."))
         return redirect(request.referrer or url_for("index"))
     try:
         cid = import_share(f.read(), replace=request.form.get("replace") == "1")
     except (ValueError, KeyError, TypeError) as e:
-        flash(f"Couldn't import: {e}")
+        flash(_("Couldn't import: {error}", error=e))
         return redirect(request.referrer or url_for("index"))
-    flash("Added to Guest Pets.")
+    flash(_("Added to Guest Pets."))
     return redirect(url_for("cat", cid=cid))
 
 
 @app.errorhandler(413)
 def too_large(_e):
-    flash("That upload is too big.")
+    flash(_("That upload is too big."))
     return redirect(request.referrer or url_for("index"))
 
 
