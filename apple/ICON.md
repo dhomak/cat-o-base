@@ -35,8 +35,9 @@ tools/make-icons.sh ~/Desktop/icon.png ~/Desktop/icon-mac.png
 ```
 
 The script checks the images are square and big enough, then writes every
-size into the asset catalog, replacing the current ones. It also refreshes
-`LaunchIcon`, the faint icon that zooms away when the app starts.
+size into the asset catalog, replacing the current ones. It also remakes
+`LaunchIcon`, the faint rounded icon on the launch screen that zooms away when
+the app starts.
 
 ## 3. See it
 

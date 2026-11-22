@@ -1,16 +1,16 @@
 import SwiftUI
 
 /// On launch, a faint copy of the app icon zooms up and fades away, revealing the app.
-/// Plays once per launch (not for each new window), can be tapped through, and only
-/// fades when Reduce Motion is on. The image is the LaunchIcon asset, which
-/// tools/make-icons.sh refreshes along with the app icon.
+/// The launch screen (project.yml, UILaunchScreen) shows the same LaunchIcon image in
+/// the same place, so the icon is there from the moment the app is tapped and the zoom
+/// picks up seamlessly. LaunchIcon is already faint and rounded; tools/make-icons.sh
+/// remakes it with the app icon. Plays once per launch (not for each new window),
+/// can be tapped through, and only fades when Reduce Motion is on.
 struct LaunchZoom: ViewModifier {
     nonisolated(unsafe) private static var played = false
 
-    /// Same size the icon has on the Home Screen, in points.
+    /// Same size as on the launch screen, in points.
     static let iconSize: CGFloat = 120
-    /// iOS rounds icons to about 22.4% of their width.
-    static let cornerRadius: CGFloat = iconSize * 0.224
 
     @State private var visible = !LaunchZoom.played
     @State private var zoomed = false
@@ -25,8 +25,7 @@ struct LaunchZoom: ViewModifier {
                     Image("LaunchIcon")
                         .resizable()
                         .frame(width: LaunchZoom.iconSize, height: LaunchZoom.iconSize)
-                        .clipShape(RoundedRectangle(cornerRadius: LaunchZoom.cornerRadius, style: .continuous))
-                        .opacity(zoomed ? 0 : 0.2)
+                        .opacity(zoomed ? 0 : 1)
                         .scaleEffect(zoomed && !reduceMotion ? 6 : 1)
                 }
                 .ignoresSafeArea()
@@ -34,8 +33,7 @@ struct LaunchZoom: ViewModifier {
                 .accessibilityHidden(true)
                 .task {
                     LaunchZoom.played = true
-                    try? await Task.sleep(for: .milliseconds(150))
-                    withAnimation(.easeIn(duration: 0.55)) {
+                    withAnimation(.easeIn(duration: 0.5)) {
                         zoomed = true
                     } completion: {
                         visible = false

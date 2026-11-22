@@ -31,6 +31,11 @@ targets:
         LSSupportsOpeningDocumentsInPlace: true
         # Languages the app is translated into (strings live in Localizable.xcstrings).
         CFBundleLocalizations: [en, ru, uk]
+        # The faint icon shows the moment the app is tapped, then LaunchZoom takes over
+        # with the same image and zooms it away. Centred on the whole screen.
+        UILaunchScreen:
+          UIImageName: LaunchIcon
+          UIImageRespectsSafeAreaInsets: false
         CFBundleDocumentTypes:
           - CFBundleTypeName: Pet-o-Base Pet
             CFBundleTypeRole: Viewer
@@ -64,7 +69,6 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Pet-o-Base
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
