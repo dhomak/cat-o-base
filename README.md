@@ -72,6 +72,33 @@ you expose it to the internet, put it behind a reverse proxy with
 authentication (for example an Nginx Proxy Manager access list, Authelia or
 Cloudflare Access).
 
+## HTTPS with a reverse proxy
+
+The app speaks plain HTTP on port 8000. Put it behind a reverse proxy to get
+`https://` and a proper name. That also makes the browser's **Share** button work,
+because browsers only allow it on secure pages. The app reads the proxy's
+`X-Forwarded-Proto` and `X-Forwarded-Host` headers, so links such as the calendar
+feed come out as `https://pets.example.com/…`.
+
+With Nginx Proxy Manager:
+
+1. **Hosts → Proxy Hosts → Add Proxy Host.**
+   - Domain name: `pets.example.com`
+   - Scheme `http`, forward hostname: the container's IP, port `8000`
+   - Tick **Block Common Exploits**.
+2. **SSL tab:** pick your existing certificate (a wildcard `*.example.com` works for
+   every service), or request a new Let's Encrypt one. If the name is only reachable
+   at home, use **DNS Challenge** with your DNS provider (e.g. a Cloudflare API token),
+   because Let's Encrypt can't reach the server to check it.
+   Tick **Force SSL** and **HTTP/2 Support**.
+3. **DNS:** point the name at the proxy. On a home network with AdGuard Home or
+   Pi-hole, a DNS rewrite to the proxy's IP is enough.
+
+Uploads: NPM allows large uploads by default. If photo uploads or a restore fail
+with "413 Request Entity Too Large", add `client_max_body_size 200m;` in the proxy
+host's **Advanced** tab. Behind Cloudflare's proxy (orange cloud), uploads are
+capped at 100 MB per request on the free plan.
+
 ## Languages
 
 The web app is available in English, Russian and Ukrainian. It follows the browser's language, and the EN / RU / UK switch in the top-right corner overrides it (remembered in a cookie).

@@ -52,6 +52,11 @@ def _secret():
 
 
 app = Flask(__name__)
+# Behind a reverse proxy (Nginx Proxy Manager, Caddy…), trust its X-Forwarded-Proto
+# and -Host so links like the calendar feed use https and the public name. Without
+# a proxy those headers aren't sent and nothing changes.
+from werkzeug.middleware.proxy_fix import ProxyFix  # noqa: E402
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("CATOBASE_MAX_UPLOAD_MB") or os.environ.get("CATDB_MAX_UPLOAD_MB") or "200") * 1024 * 1024
 app.secret_key = os.environ.get("CATOBASE_SECRET") or _secret()
 
