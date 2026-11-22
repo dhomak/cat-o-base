@@ -100,6 +100,29 @@ edit translations. Permission prompts are in `CatOBase/InfoPlist.xcstrings`.
 When the code gets new text, Xcode adds it to the catalog on the next build,
 marked as needing translation; until then it shows in English.
 
+## Running the tests
+
+Press **⌘U** in Xcode (or Product → Test). Pick an iPhone simulator or "My Mac"
+in the device menu first. No paid developer account is needed.
+
+The tests use a separate in-memory database, so they never touch your pets.
+They cover:
+
+- backups: everything survives export and import, replace vs add, broken or newer files;
+- importing from the web app: its full-backup zip, its JSON export and a pet shared from it;
+- the zip reader;
+- sharing: what each option leaves out, the sender's name, updating a guest copy;
+- due dates, vaccines, treatments, the weight-loss warning, reminders and sorting;
+- Russian and Ukrainian plurals and the gotcha-day wording.
+
+The web files in `CatOBaseTests/Fixtures` are made by the real web app. After changing
+the web app's export format, rebuild them and rerun the tests:
+
+```sh
+cd apple/CatOBaseTests/Fixtures
+python3 make_fixtures.py
+```
+
 ## Keyboard shortcuts (Mac, and iPad with a keyboard)
 
 | | |
@@ -144,6 +167,8 @@ CatOBase/
   Assets.xcassets           app icon, accent colour
   Localizable.xcstrings     English, Russian and Ukrainian text
   InfoPlist.xcstrings       translated permission prompts
+CatOBaseTests/              unit tests (⌘U)
+  Fixtures/                 files made by the web app, and make_fixtures.py
 ```
 
 ## Roadmap

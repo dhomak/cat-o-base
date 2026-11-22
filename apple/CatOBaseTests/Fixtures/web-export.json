@@ -1,0 +1,190 @@
+{
+  "app": "cat-o-base",
+  "exported": "2026-11-22T15:40:43",
+  "cats": [
+    {
+      "id": 1,
+      "name": "Murka",
+      "sex": "female",
+      "neutered": 1,
+      "breed": "Domestic shorthair",
+      "markings": "Tabby, white socks",
+      "birthday": "2015-03-10",
+      "birthday_approx": 0,
+      "adoption_date": "2016-05-01",
+      "microchip": "972000123456789",
+      "special_needs": "Kidney diet",
+      "allergies": "Chicken",
+      "food_brand": "Royal Canin Renal",
+      "food_portion": "½ pouch",
+      "food_schedule": "08:00 and 20:00",
+      "food_notes": null,
+      "notes": "Hides under the bed",
+      "profile_photo_id": 1,
+      "archived": 0,
+      "created_at": "2026-11-22 13:40:43",
+      "species": "cat",
+      "is_guest": 0,
+      "guest_from": null,
+      "guest_since": null,
+      "guest_contacts": null,
+      "share_id": null
+    },
+    {
+      "id": 2,
+      "name": "Rex",
+      "sex": "male",
+      "neutered": 0,
+      "breed": null,
+      "markings": null,
+      "birthday": null,
+      "birthday_approx": 0,
+      "adoption_date": null,
+      "microchip": null,
+      "special_needs": null,
+      "allergies": null,
+      "food_brand": null,
+      "food_portion": null,
+      "food_schedule": null,
+      "food_notes": null,
+      "notes": null,
+      "profile_photo_id": null,
+      "archived": 0,
+      "created_at": "2026-11-22 13:40:43",
+      "species": "dog",
+      "is_guest": 0,
+      "guest_from": null,
+      "guest_since": null,
+      "guest_contacts": null,
+      "share_id": null
+    },
+    {
+      "id": 3,
+      "name": "Splinter",
+      "sex": null,
+      "neutered": 0,
+      "breed": null,
+      "markings": null,
+      "birthday": null,
+      "birthday_approx": 0,
+      "adoption_date": null,
+      "microchip": null,
+      "special_needs": null,
+      "allergies": null,
+      "food_brand": null,
+      "food_portion": null,
+      "food_schedule": null,
+      "food_notes": null,
+      "notes": null,
+      "profile_photo_id": null,
+      "archived": 0,
+      "created_at": "2026-11-22 13:40:43",
+      "species": "rat",
+      "is_guest": 1,
+      "guest_from": "Anna",
+      "guest_since": "2026-11-15",
+      "guest_contacts": "[{\"role\": \"Owner\", \"name\": \"Anna\", \"phone\": \"+972541234567\", \"address\": \"\", \"notes\": \"\"}]",
+      "share_id": null
+    }
+  ],
+  "photos": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "filename": "e53929e31bd040d2addba71d32f34fd8.jpg",
+      "caption": null,
+      "taken_on": null,
+      "created_at": "2026-11-22 13:40:43"
+    },
+    {
+      "id": 2,
+      "cat_id": 1,
+      "filename": "d23cdde54e9e41b19cb6de8fac2b1270.jpg",
+      "caption": null,
+      "taken_on": null,
+      "created_at": "2026-11-22 13:40:43"
+    }
+  ],
+  "weights": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "date": "2026-05-01",
+      "kg": 4.6
+    },
+    {
+      "id": 2,
+      "cat_id": 1,
+      "date": "2026-11-01",
+      "kg": 4.1
+    }
+  ],
+  "vaccinations": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "name": "Rabies",
+      "date_given": "2025-11-10",
+      "next_due": "2026-11-10",
+      "vet": null,
+      "notes": null
+    }
+  ],
+  "treatments": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "kind": "flea/tick",
+      "name": "Bravecto",
+      "dose": "1 pipette",
+      "schedule": null,
+      "interval_days": 90,
+      "last_given": "2026-10-01",
+      "next_due": "2026-12-30",
+      "end_date": null,
+      "active": 1,
+      "notes": null
+    }
+  ],
+  "visits": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "date": "2026-06-15",
+      "clinic": "Steisneider",
+      "reason": "Check-up",
+      "outcome": null,
+      "cost": "350",
+      "notes": null
+    }
+  ],
+  "documents": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "title": "Bloodwork",
+      "filename": "d_e3a1608ae01149109b2ea7ebb2822967.pdf",
+      "original_name": "bloodwork.pdf",
+      "created_at": "2026-11-22 13:40:43"
+    }
+  ],
+  "logs": [
+    {
+      "id": 1,
+      "cat_id": 1,
+      "date": "2026-11-20",
+      "kind": "nails",
+      "text": "Trimmed"
+    }
+  ],
+  "contacts": [
+    {
+      "id": 1,
+      "role": "vet",
+      "name": "Steisneider",
+      "phone": "037307333",
+      "address": null,
+      "notes": null
+    }
+  ]
+}

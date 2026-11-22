@@ -77,3 +77,49 @@ targets:
         "ENABLE_APP_SANDBOX[sdk=macosx*]": YES
         "ENABLE_USER_SELECTED_FILES[sdk=macosx*]": readwrite
         "ENABLE_HARDENED_RUNTIME[sdk=macosx*]": YES
+
+  CatOBaseTests:
+    type: bundle.unit-test
+    platform: auto
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: CatOBaseTests
+        excludes:
+          - "**/*.py"
+    dependencies:
+      - target: CatOBase
+    settings:
+      base:
+        PRODUCT_NAME: CatOBaseTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.arimanoff.catobase.tests
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Pet-o-Base.app/Pet-o-Base"
+        "TEST_HOST[sdk=macosx*]": "$(BUILT_PRODUCTS_DIR)/Pet-o-Base.app/Contents/MacOS/Pet-o-Base"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  CatOBase:
+    build:
+      targets:
+        CatOBase: all
+        CatOBaseTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      coverageTargets: [CatOBase]
+      # The tests check English text; the Russian/Ukrainian ones read those bundles directly.
+      language: en
+      region: US
+      targets:
+        - CatOBaseTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
