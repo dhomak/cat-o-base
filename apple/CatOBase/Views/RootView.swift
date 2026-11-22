@@ -48,7 +48,7 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            Tab("Cats", systemImage: "cat", value: AppTab.cats) {
+            Tab("Pets", systemImage: "pawprint", value: AppTab.cats) {
                 CatsView()
             }
             Tab("Due", systemImage: "calendar.badge.clock", value: AppTab.due) {

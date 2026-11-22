@@ -40,14 +40,14 @@ struct CatsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if !myCats.isEmpty {
                         if !guestCats.isEmpty {
-                            sectionHeader("My Cats")
+                            sectionHeader("My Pets")
                         }
                         grid(myCats)
                     }
                     if !guestCats.isEmpty {
-                        sectionHeader("Guest Cats")
+                        sectionHeader("Guest Pets")
                             .padding(.top, myCats.isEmpty ? 0 : 12)
-                            .help("Cats other people shared with you")
+                            .help("Pets you look after for other people, or that were shared with you")
                         grid(guestCats)
                     }
                 }
@@ -63,7 +63,7 @@ struct CatsView: View {
                 }
             }
             .searchable(text: $search, prompt: "Name, breed, owner, microchip")
-            .navigationTitle(showArchived ? "Archived" : "Cats")
+            .navigationTitle(showArchived ? "Archived" : "Pets")
             .navigationDestination(for: Cat.self) { cat in
                 CatDetailView(cat: cat)
             }
@@ -72,23 +72,23 @@ struct CatsView: View {
                     Button {
                         showingNewCat = true
                     } label: {
-                        Label("Add Cat", systemImage: "plus")
+                        Label("Add Pet", systemImage: "plus")
                     }
                     #if os(iOS)
                     .keyboardShortcut("n", modifiers: .command)
                     #endif
-                    .help("Add a cat (⌘N)")
+                    .help("Add a pet (⌘N)")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Button {
                         showingNewGuest = true
                     } label: {
-                        Label("New Guest Cat", systemImage: "person.2")
+                        Label("New Guest Pet", systemImage: "person.2")
                     }
                     #if os(iOS)
                     .keyboardShortcut("n", modifiers: [.command, .shift])
                     #endif
-                    .help("Add a cat you're looking after for someone (⇧⌘N)")
+                    .help("Add a pet you're looking after for someone (⇧⌘N)")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Menu {
@@ -100,7 +100,7 @@ struct CatsView: View {
                     } label: {
                         Label("Sort by", systemImage: "arrow.up.arrow.down")
                     }
-                    .help("Sort cats by name or age")
+                    .help("Sort pets by name or age")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Button {
@@ -108,13 +108,13 @@ struct CatsView: View {
                     } label: {
                         Label("Sitter Sheet", systemImage: "doc.text.image")
                     }
-                    .help("Make a printable care sheet for all cats")
+                    .help("Make a printable care sheet for all pets")
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Toggle(isOn: $showArchived) {
                         Label("Show Archived", systemImage: "archivebox")
                     }
-                    .help(showArchived ? "Show current cats" : "Show archived cats")
+                    .help(showArchived ? "Show current pets" : "Show archived pets")
                 }
             }
             .sheet(isPresented: $showingNewCat) {
@@ -171,17 +171,17 @@ struct CatsView: View {
     private var emptyState: some View {
         if showArchived {
             ContentUnavailableView(
-                "No Archived Cats",
+                "No Archived Pets",
                 systemImage: "archivebox",
-                description: Text("Cats you archive appear here, with all their records kept.")
+                description: Text("Pets you archive appear here, with all their records kept.")
             )
         } else {
             ContentUnavailableView {
-                Label("No Cats Yet", systemImage: "cat")
+                Label("No Pets Yet", systemImage: "pawprint")
             } description: {
-                Text("Add your first cat to start keeping records.")
+                Text("Add your first pet to start keeping records.")
             } actions: {
-                Button("Add a Cat") { showingNewCat = true }
+                Button("Add a Pet") { showingNewCat = true }
                     .buttonStyle(.borderedProminent)
             }
         }

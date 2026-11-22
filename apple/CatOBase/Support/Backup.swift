@@ -243,7 +243,7 @@ struct BackupDocument: FileDocument {
 // MARK: - Import
 
 enum BackupSource: String {
-    case catShare = "Shared cat"
+    case catShare = "Shared pet"
     case app = "Cat-o-Base app backup"
     case webZip = "Cat-o-Base web full backup"
     case webJSON = "Cat-o-Base web data export (no photos)"
@@ -303,7 +303,7 @@ struct ImportSummary {
 
     var text: String {
         func plural(_ count: Int, _ word: String) -> String { "\(count) \(word)\(count == 1 ? "" : "s")" }
-        return [plural(cats, "cat"), plural(photos, "photo"), plural(documents, "document"),
+        return [plural(cats, "pet"), plural(photos, "photo"), plural(documents, "document"),
                 plural(contacts, "contact")].joined(separator: ", ")
     }
 }
@@ -338,7 +338,7 @@ enum BackupImporter {
         var summary = ImportSummary()
         for (catIndex, dto) in file.cats.enumerated() {
             try Task.checkCancellation()
-            let catLabel = "\(dto.name.isEmpty ? "Cat" : dto.name) (\(catIndex + 1) of \(file.cats.count))"
+            let catLabel = "\(dto.name.isEmpty ? "Pet" : dto.name) (\(catIndex + 1) of \(file.cats.count))"
             progress("Importing \(catLabel)…")
             log.info("Cat \(catLabel, privacy: .public): \(dto.photos.count) photos, \(dto.documents.count) documents")
             await Task.yield()

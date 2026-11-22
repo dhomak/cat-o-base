@@ -123,7 +123,7 @@ struct CatDetailView: View {
                 } label: {
                     Label("Sitter Sheet", systemImage: "doc.text.image")
                 }
-                .help("Make a printable care sheet for this cat")
+                .help("Make a printable care sheet for this pet")
             }
             ToolbarItem(placement: .secondaryAction) {
                 Button {
@@ -138,9 +138,9 @@ struct CatDetailView: View {
                 Button(role: .destructive) {
                     confirmingDelete = true
                 } label: {
-                    Label(cat.isGuest ? "Remove Guest Cat" : "Delete Cat", systemImage: "trash")
+                    Label(cat.isGuest ? "Remove Guest Pet" : "Delete Pet", systemImage: "trash")
                 }
-                .help("Delete this cat and all its records")
+                .help("Delete this pet and all its records")
             }
         }
         .sheet(isPresented: $editing) {
@@ -207,9 +207,9 @@ struct CatDetailView: View {
         #endif
         .confirmationDialog("Delete \(cat.displayName)?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
-            Button("Delete Cat and All Records", role: .destructive, action: deleteCat)
+            Button("Delete Pet and All Records", role: .destructive, action: deleteCat)
         } message: {
-            Text("This permanently deletes every record and photo for this cat. Archiving hides the cat but keeps everything.")
+            Text("This permanently deletes every record and photo for this pet. Archiving hides the pet but keeps everything.")
         }
     }
 
@@ -218,7 +218,7 @@ struct CatDetailView: View {
         Section {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(cat.guestFrom.isEmpty ? "Guest cat" : "Guest cat from \(cat.guestFrom)")
+                    Text(cat.guestFrom.isEmpty ? "Guest pet" : "Guest pet from \(cat.guestFrom)")
                         .font(.body.weight(.medium))
                     Text(cat.shareID == nil
                          ? "Staying since \(Fmt.date(cat.guestReceivedAt))."

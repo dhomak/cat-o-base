@@ -69,7 +69,7 @@ struct CatShareView: View {
                             shareRow("Share File and Text", detail: "Messages, Mail, AirDrop",
                                      systemImage: "square.and.arrow.up")
                         }
-                        .help("Sends the cat file with the readable summary")
+                        .help("Sends the pet file with the readable summary")
 
                         ShareLink(item: fileURL,
                                   preview: SharePreview("\(cat.displayName).catobase", image: previewImage)) {
@@ -90,7 +90,7 @@ struct CatShareView: View {
                     .help("Just the readable summary, no file")
                 } footer: {
                     if let fileSize {
-                        Text("File size: \(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)). Anyone with Cat-o-Base can open the file to add \(cat.displayName) to their Guest Cats. In Telegram, send the file and the text separately.")
+                        Text("File size: \(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)). Anyone with Cat-o-Base can open the file to add \(cat.displayName) to their Guest Pets. In Telegram, send the file and the text separately.")
                     }
                 }
 
@@ -143,7 +143,7 @@ struct CatShareView: View {
         if let image = cat.profilePhoto?.thumbnailImage {
             return Image(decorative: image, scale: 1)
         }
-        return Image(systemName: "cat.fill")
+        return Image(systemName: "pawprint.fill")
     }
 }
 
@@ -189,7 +189,7 @@ struct GuestReceiveView: View {
                 Section {
                     VStack(spacing: 10) {
                         AvatarCircle(image: avatar, size: 110)
-                        Text(cat.name.isEmpty ? "Unnamed cat" : cat.name)
+                        Text(cat.name.isEmpty ? "Unnamed pet" : cat.name)
                             .font(.title.bold())
                         Text(sender.isEmpty ? "Shared with you" : "Shared by \(sender)")
                             .foregroundStyle(.secondary)
@@ -228,7 +228,7 @@ struct GuestReceiveView: View {
                         Button {
                             add(replacing: nil)
                         } label: {
-                            Label("Add to Guest Cats", systemImage: "plus.circle.fill")
+                            Label("Add to Guest Pets", systemImage: "plus.circle.fill")
                         }
                         .disabled(working)
                     } footer: {
@@ -244,7 +244,7 @@ struct GuestReceiveView: View {
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle("Shared Cat")
+            .navigationTitle("Shared Pet")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -253,7 +253,7 @@ struct GuestReceiveView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .alert("Couldn't add the cat", isPresented: Binding(
+            .alert("Couldn't add the pet", isPresented: Binding(
                 get: { failure != nil },
                 set: { if !$0 { failure = nil } }
             )) {

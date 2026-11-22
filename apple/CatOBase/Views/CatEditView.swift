@@ -75,7 +75,7 @@ struct CatEditView: View {
                         }
                     }
                     Toggle("Neutered / spayed", isOn: $draft.neutered)
-                    TextField("Breed", text: $draft.breed, prompt: Text("e.g. domestic shorthair"))
+                    TextField("Breed", text: $draft.breed, prompt: Text("e.g. domestic shorthair, beagle"))
                     TextField("Colour & markings", text: $draft.markings, prompt: Text("e.g. tabby, white socks"))
                     TextField("Microchip number", text: $draft.microchip)
                         .autocorrectionDisabled()
@@ -113,7 +113,7 @@ struct CatEditView: View {
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle(cat == nil ? (draft.isGuest ? "New Guest Cat" : "New Cat") : "Edit Cat")
+            .navigationTitle(cat == nil ? (draft.isGuest ? "New Guest Pet" : "New Pet") : "Edit Pet")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -143,8 +143,8 @@ struct CatEditView: View {
     @ViewBuilder
     private var guestSections: some View {
         Section {
-            Toggle("Guest cat", isOn: $draft.isGuest.animation())
-                .help("For a cat you're looking after for someone else")
+            Toggle("Guest pet", isOn: $draft.isGuest.animation())
+                .help("For a pet you're looking after for someone else")
             if draft.isGuest {
                 TextField("Owner's name", text: $draft.guestFrom, prompt: Text("e.g. Anna"))
                 DatePicker("Staying since", selection: $draft.guestSince, displayedComponents: .date)
@@ -153,8 +153,8 @@ struct CatEditView: View {
             Text("Guest")
         } footer: {
             Text(draft.isGuest
-                 ? "Listed under Guest Cats. The contacts below appear on this cat's page and sitter sheet."
-                 : "Turn on for a cat you're looking after, like a friend's cat you're babysitting.")
+                 ? "Listed under Guest Pets. The contacts below appear on this pet's page and sitter sheet."
+                 : "Turn on for a pet you're looking after, like a friend's cat or dog you're babysitting.")
         }
 
         if draft.isGuest {

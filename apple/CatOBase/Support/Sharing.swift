@@ -137,7 +137,7 @@ enum CatShareBuilder {
     /// A readable message for people without the app (and a preview for those with it).
     static func summary(for cat: Cat, options: ShareOptions, sender: String,
                         ownContacts: [Contact], unit: WeightUnit) -> String {
-        var lines: [String] = ["🐱 \(cat.displayName)"]
+        var lines: [String] = ["🐾 \(cat.displayName)"]
 
         var facts: [String] = []
         if let age = Fmt.age(from: cat.birthday) { facts.append(cat.birthdayApprox ? "about \(age)" : age) }
@@ -236,7 +236,7 @@ final class GuestInbox {
             case .success(let read) where read.1 == .catShare && !read.0.cats.isEmpty:
                 pending = ReceivedShare(file: read.0)
             case .success:
-                error = "This is a full backup, not a shared cat. To restore it, use Settings → Backup → Import."
+                error = "This is a full backup, not a shared pet. To restore it, use Settings → Backup → Import."
             case .failure(let failure):
                 error = failure.localizedDescription
             }

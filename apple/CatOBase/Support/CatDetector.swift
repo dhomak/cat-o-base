@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 import Vision
 
-/// Finds a cat in a photo with Apple's on-device Vision framework.
+/// Finds a cat or dog in a photo with Apple's on-device Vision framework.
 enum CatDetector {
     struct Crop: Sendable {
         let centerX: Double
@@ -22,12 +22,13 @@ enum CatDetector {
         }
         guard let results = request.results, !results.isEmpty else { return nil }
 
+        // Vision's animal recogniser knows cats and dogs; pick the most confident one.
         func score(_ observation: VNRecognizedObjectObservation) -> Float {
-            let catConfidence = observation.labels
-                .first { $0.identifier.lowercased() == "cat" }?
-                .confidence ?? 0
-            // Any cat beats any other animal.
-            return catConfidence > 0 ? 1 + catConfidence : observation.confidence
+            let petConfidence = observation.labels
+                .filter { ["cat", "dog"].contains($0.identifier.lowercased()) }
+                .map(\.confidence)
+                .max() ?? 0
+            return petConfidence > 0 ? 1 + petConfidence : observation.confidence
         }
 
         guard let best = results.max(by: { score($0) < score($1) }) else { return nil }

@@ -34,12 +34,12 @@ struct CatOBaseCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
-        // File menu: "New Cat" takes ⌘N; a new window moves to ⌥⌘N.
+        // File menu: "New Pet" takes ⌘N; a new window moves to ⌥⌘N.
         CommandGroup(replacing: .newItem) {
-            Button("New Cat") { app?.newCat() }
+            Button("New Pet") { app?.newCat() }
                 .keyboardShortcut("n", modifiers: .command)
                 .disabled(app == nil)
-            Button("New Guest Cat") { app?.newGuestCat() }
+            Button("New Guest Pet") { app?.newGuestCat() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
                 .disabled(app == nil)
             Divider()
@@ -47,8 +47,8 @@ struct CatOBaseCommands: Commands {
                 .keyboardShortcut("n", modifiers: [.command, .option])
         }
 
-        CommandMenu("Cat") {
-            Button(cat.map { "Edit \($0.name)" } ?? "Edit Cat") { cat?.edit() }
+        CommandMenu("Pet") {
+            Button(cat.map { "Edit \($0.name)" } ?? "Edit Pet") { cat?.edit() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(cat == nil)
             Divider()
@@ -93,7 +93,7 @@ struct CatWindowView: View {
             if let cat = context.model(for: id) as? Cat, !cat.isDeleted {
                 CatDetailView(cat: cat)
             } else {
-                ContentUnavailableView("Cat Not Found", systemImage: "cat",
+                ContentUnavailableView("Pet Not Found", systemImage: "pawprint",
                                        description: Text("It may have been deleted."))
             }
         }

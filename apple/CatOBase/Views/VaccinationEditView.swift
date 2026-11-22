@@ -47,7 +47,8 @@ struct VaccinationEditView: View {
     @State private var notes: String
     @State private var confirmingDelete = false
 
-    private static let suggestions = ["Rabies", "FVRCP (tricat)", "FeLV", "Chlamydia", "FIP"]
+    /// Common cat and dog vaccines; any name can be typed.
+    private static let suggestions = ["Rabies", "FVRCP (tricat)", "FeLV", "DHPP", "Leptospirosis", "Bordetella"]
 
     init(cat: Cat, vaccination: Vaccination?) {
         self.cat = cat

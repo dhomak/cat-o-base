@@ -82,7 +82,7 @@ final class Cat {
     }
 
     var displayName: String {
-        name.isEmpty ? "Unnamed cat" : name
+        name.isEmpty ? "Unnamed pet" : name
     }
 
     var guestContacts: [ContactDTO] {

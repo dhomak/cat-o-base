@@ -102,7 +102,7 @@ struct SettingsView: View {
                 Button("Replace All My Data", role: .destructive) { performImport(pending, replace: true) }
                 Button("Cancel", role: .cancel) { pendingImport = nil }
             } message: { pending in
-                Text("\(pending.source.rawValue): \(pending.file.cats.count) cats, \(pending.file.contacts.count) contacts. Adding keeps everything you have, so importing the same backup twice makes duplicates. Replacing deletes your current data first.")
+                Text("\(pending.source.rawValue): \(pending.file.cats.count) pets, \(pending.file.contacts.count) contacts. Adding keeps everything you have, so importing the same backup twice makes duplicates. Replacing deletes your current data first.")
             }
             .alert("Backup", isPresented: Binding(
                 get: { resultMessage != nil },
@@ -152,7 +152,7 @@ extension SettingsView {
 
     private var displaySection: some View {
         Section("Display") {
-            Picker("Sort cats by", selection: $sort) {
+            Picker("Sort pets by", selection: $sort) {
                 ForEach(CatSort.allCases) { option in
                     Text(option.label).tag(option)
                 }
@@ -208,14 +208,14 @@ extension SettingsView {
         } header: {
             Text("Backup")
         } footer: {
-            Text("A backup is one file with every cat, record, photo and document. Import takes backups from this app and from the Cat-o-Base web app (its Full backup .zip, or the data-only .json).")
+            Text("A backup is one file with every pet, record, photo and document. Import takes backups from this app and from the Cat-o-Base web app (its Full backup .zip, or the data-only .json).")
         }
     }
 
     @ViewBuilder
     private var dataSection: some View {
         Section("Your data") {
-            LabeledContent("Cats", value: "\(cats.count)")
+            LabeledContent("Pets", value: "\(cats.count)")
             LabeledContent("Photos", value: "\(photos.count)")
             LabeledContent("Contacts", value: "\(contacts.count)")
             LabeledContent("Stored", value: "On this device")
@@ -279,7 +279,7 @@ extension SettingsView {
                 resultMessage = "Imported \(summary.text)."
             } catch is CancellationError {
                 try? context.save()
-                resultMessage = "Import cancelled. Cats that finished importing were kept."
+                resultMessage = "Import cancelled. Pets that finished importing were kept."
             } catch {
                 BackupImporter.log.error("Import failed: \(error.localizedDescription, privacy: .public)")
                 resultMessage = "Import failed: \(error.localizedDescription)"

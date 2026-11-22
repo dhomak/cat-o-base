@@ -13,7 +13,7 @@ struct AvatarCircle: View {
                     .scaledToFill()
             } else {
                 Circle().fill(Color.accentColor.opacity(0.15))
-                Image(systemName: "cat.fill")
+                Image(systemName: "pawprint.fill")
                     .font(.system(size: size * 0.42))
                     .foregroundStyle(Color.accentColor)
             }

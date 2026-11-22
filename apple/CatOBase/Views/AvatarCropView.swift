@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 /// Position and zoom a photo inside a circle to make the round profile picture.
-/// Drag to move, pinch (or the slider) to zoom, "Find Cat" to auto-centre.
+/// Drag to move, pinch (or the slider) to zoom, "Find Pet" to auto-centre (cats and dogs).
 struct AvatarCropView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -51,12 +51,12 @@ struct AvatarCropView: View {
                             if detecting {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Label("Find Cat", systemImage: "viewfinder")
+                                Label("Find Pet", systemImage: "viewfinder")
                             }
                         }
                         .buttonStyle(.bordered)
                         .disabled(detecting)
-                        .help("Find the cat in the photo and centre on it")
+                        .help("Find the cat or dog in the photo and centre on it")
 
                         Button {
                             withAnimation { reset(image) }
@@ -90,10 +90,10 @@ struct AvatarCropView: View {
                         .disabled(image == nil || saving)
                 }
             }
-            .alert("No cat found", isPresented: $noCatFound) {
+            .alert("No pet found", isPresented: $noCatFound) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("Couldn't spot a cat in this photo. Drag and zoom to position it yourself.")
+                Text("Automatic centring recognises cats and dogs, and couldn't find one here. Drag and zoom to position the photo yourself.")
             }
             .task { await load() }
         }

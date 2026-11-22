@@ -11,7 +11,7 @@ enum SitterSheetPDF {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("sitter-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let title = cats.count == 1 ? "\(cats[0].displayName) care sheet" : "Cat care sheet"
+        let title = cats.count == 1 ? "\(cats[0].displayName) care sheet" : "Pet care sheet"
         let url = folder.appendingPathComponent("\(title).pdf")
 
         var mediaBox = CGRect(origin: .zero, size: pageSize)
@@ -20,7 +20,7 @@ enum SitterSheetPDF {
         let generated = Date()
         var pages: [AnyView] = []
         if cats.isEmpty {
-            pages.append(AnyView(Text("No cats yet.").font(.title)
+            pages.append(AnyView(Text("No pets yet.").font(.title)
                 .frame(width: pageSize.width, height: pageSize.height)))
         }
         for cat in cats {

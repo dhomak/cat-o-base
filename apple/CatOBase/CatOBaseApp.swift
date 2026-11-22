@@ -35,7 +35,7 @@ struct CatOBaseApp: App {
         }
 
         // One cat in its own window (Mac, and iPad with multiple windows).
-        WindowGroup("Cat", id: WindowID.cat, for: PersistentIdentifier.self) { $id in
+        WindowGroup("Pet", id: WindowID.cat, for: PersistentIdentifier.self) { $id in
             if let id {
                 CatWindowView(id: id)
             }
