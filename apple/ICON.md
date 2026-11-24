@@ -24,6 +24,9 @@ one or two images; a script does the resizing.
 Any editor that exports PNG works: Figma, Affinity, Pixelmator, Photoshop,
 Sketch.
 
+The current artwork is kept in `Artwork/`: `icon.png` (iPhone/iPad) and
+`icon-mac.png` (rounded, with margin and shadow). Start from those to tweak it.
+
 ## 2. Install it
 
 From the `apple` folder on your Mac:
