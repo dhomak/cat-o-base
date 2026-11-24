@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}{{ _("Pets") }}{% endblock %} · Pet-o-Base</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="icon" href="{{ url_for('static', filename='icon.svg') }}">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="48x48">
+<link rel="icon" href="{{ url_for('static', filename='icon-192.png') }}" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1d21" media="(prefers-color-scheme: dark)">
 </head>
 <body class="{% block bodyclass %}{% endblock %}">
 <header class="top">
-  <a href="{{ url_for('index') }}" class="logo"><img src="{{ url_for('static', filename='icon.svg') }}" alt="">Pet-o-Base</a>
+  <a href="{{ url_for('index') }}" class="logo"><img src="{{ url_for('static', filename='icon-192.png') }}" alt="">Pet-o-Base</a>
   <nav>
     <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="on"{% endif %}>{{ _("Pets") }}</a>
     <a href="{{ url_for('due_page') }}" {% if request.endpoint=='due_page' %}class="on"{% endif %}>{{ _("Due") }}</a>

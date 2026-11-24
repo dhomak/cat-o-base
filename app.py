@@ -66,6 +66,12 @@ def _choose_language():
     g.lang = detect_language()
 
 
+@app.route("/favicon.ico")
+def favicon():
+    """Browsers ask for /favicon.ico on their own, e.g. for bookmarks and the PDF viewer."""
+    return send_from_directory(app.static_folder, "favicon.ico", max_age=86400 * 7)
+
+
 @app.route("/lang/<code>")
 def set_language(code):
     target = request.args.get("next") or url_for("index")
